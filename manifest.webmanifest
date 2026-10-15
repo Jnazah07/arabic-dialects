@@ -1,0 +1,36 @@
+{
+  "name": "Arabic Dialects - Learn Arabic",
+  "short_name": "Arabic",
+  "description": "Learn Arabic across 25 regional dialects with bite-sized, Duolingo-style lessons. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "arabic-dialects",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "en",
+  "background_color": "#fafbfc",
+  "theme_color": "#58cc02",
+  "categories": ["education", "languages"],
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

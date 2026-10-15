@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Arabic Dialects - Learn Arabic</title>
+    <meta name="description" content="Learn Arabic across 25 regional dialects with bite-sized, Duolingo-style lessons. Works offline.">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Arabic">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Splash/Onboarding Screen -->
+    <div id="onboardingScreen" class="screen active">
+        <div class="container">
+            <div class="onboarding-hero">
+                <div class="app-logo">عربِيّ</div>
+                <h1 class="hero-title">Learn Arabic Like Duolingo</h1>
+                <p class="hero-subtitle">Pick your target dialect. Master words, phrases, and pronunciation with bite-sized lessons.</p>
+            </div>
+
+            <section class="dialect-section">
+                <h2 class="section-title">Choose Your Dialect</h2>
+                <div class="dialect-grid" id="dialectGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="homeScreen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" id="backToOnboarding" aria-label="Back to dialect selection">←</button>
+            <div class="header-info">
+                <h2 class="dialect-name" id="headerDialectName"></h2>
+                <span class="streak-badge" id="streakBadge">🔥 <span id="streakCount">0</span> day streak</span>
+            </div>
+            <div class="header-actions">
+                <span class="xp-badge" id="xpBadge">⭐ <span id="xpCount">0</span> XP</span>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="progress-overview">
+                <h3>Your Progress</h3>
+                <div class="level-indicator">
+                    <span>Level <span id="userLevel">1</span></span>
+                    <div class="xp-bar">
+                        <div class="xp-bar-fill" id="xpBarFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="units-section">
+                <h3>Units</h3>
+                <div class="units-list" id="unitsList">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Lesson Screen -->
+    <div id="lessonScreen" class="screen">
+        <header class="lesson-header">
+            <button class="close-lesson" id="closeLesson">✕</button>
+            <div class="lesson-progress">
+                <div class="lesson-progress-bar">
+                    <div class="lesson-progress-fill" id="lessonProgressFill" style="width: 0%"></div>
+                </div>
+                <span class="lesson-counter"><span id="currentQ">1</span>/<span id="totalQ">5</span></span>
+            </div>
+        </header>
+
+        <div class="lesson-content container">
+            <div class="question-area" id="questionArea">
+                <!-- Question rendered here -->
+            </div>
+            <div class="feedback-area" id="feedbackArea" aria-live="polite">
+                <div class="feedback-text" id="feedbackText"></div>
+                <div class="auto-timer" id="autoTimer" hidden>
+                    <div class="auto-timer-fill" id="autoTimerFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lesson-actions">
+            <button class="btn btn-secondary" id="skipBtn">Skip</button>
+        </div>
+    </div>
+
+    <!-- Profile Screen -->
+    <div id="profileScreen" class="screen">
+        <header class="app-header">
+            <h2>Profile</h2>
+        </header>
+        <div class="container">
+            <div class="profile-card">
+                <div class="profile-avatar">👤</div>
+                <h3 class="profile-name">Learner</h3>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="profileStreak">0</span>
+                        <span class="stat-label">Day Streak</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="profileXP">0</span>
+                        <span class="stat-label">Total XP</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="profileLevel">1</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                </div>
+            </div>
+
+            <section class="achievements">
+                <h3>Achievements</h3>
+                <div class="badge-grid">
+                    <div class="badge-item locked" title="Complete 5 lessons">
+                        <span class="badge-icon">🏆</span>
+                        <span class="badge-name">First Steps</span>
+                    </div>
+                    <div class="badge-item locked" title="7 day streak">
+                        <span class="badge-icon">🔥</span>
+                        <span class="badge-name">Week Warrior</span>
+                    </div>
+                    <div class="badge-item locked" title="1000 XP">
+                        <span class="badge-icon">⭐</span>
+                        <span class="badge-name">XP Master</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings">
+                <h3>Settings</h3>
+                <div class="setting-item">
+                    <label for="dialectSelectProfile">Current Dialect</label>
+                    <select id="dialectSelectProfile" class="dialect-select"></select>
+                </div>
+
+                <div class="install-row" id="installRow" hidden>
+                    <button class="btn btn-primary" id="installBtn">Install app</button>
+                    <p class="install-hint">Adds the app to this device so it works offline.</p>
+                </div>
+                <p class="install-hint" id="iosInstallHint" hidden>
+                    On iPhone or iPad: tap Share, then "Add to Home Screen".
+                </p>
+
+                <button class="btn btn-secondary" id="resetProgressBtn" style="margin-top:1rem">Reset Progress</button>
+            </section>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav" hidden>
+        <button class="nav-btn active" data-tab="home">🏠 Lessons</button>
+        <button class="nav-btn" data-tab="profile">👤 Profile</button>
+    </nav>
+
+    <script src="data/dialects.js"></script>
+    <script src="data/lessonData.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // PWA: register the service worker for offline use.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
+        // Install prompt. Chrome/Edge/Android fire beforeinstallprompt;
+        // iOS Safari needs the manual "Add to Home Screen" route.
+        (function () {
+            const row = document.getElementById('installRow');
+            const btn = document.getElementById('installBtn');
+            const iosHint = document.getElementById('iosInstallHint');
+            let deferredPrompt = null;
+
+            const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true;
+            if (standalone) return;
+
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (isIOS) {
+                iosHint.hidden = false;
+                return;
+            }
+
+            window.addEventListener('beforeinstallprompt', e => {
+                e.preventDefault();
+                deferredPrompt = e;
+                row.hidden = false;
+            });
+
+            btn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                row.hidden = true;
+            });
+        })();
+    </script>
+</body>
+</html>

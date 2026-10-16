@@ -1011,3 +1011,55 @@ body.has-nav {
         transform: none;
     }
 }
+/* Lesson title and transliteration hint */
+.lesson-progress {
+    flex-wrap: wrap;
+}
+
+.lesson-title {
+    flex: 1 0 100%;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    order: -1;
+}
+
+.prompt-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.prompt-translit {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    direction: ltr;
+    text-align: right;
+}
+
+/* Test / review screen */
+.test-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.test-lead {
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0 0 var(--spacing-lg);
+}
+
+.test-info {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    margin: var(--spacing-md) 0 var(--spacing-lg);
+}
+
+.test-card .btn {
+    width: 100%;
+}

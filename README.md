@@ -3,16 +3,16 @@
 Learn Arabic across **25 regional dialects** with bite-sized, Duolingo-style lessons.
 Lessons grade themselves and move on automatically, so you can focus on the language.
 
-**Live app:** https://jnazah07.github.io/arabic-dialects/
+**Live app:** https://Jnazah07.github.io/arabic-dialects/
 
 ## Get the app
 
 | Platform | How |
 |----------|-----|
-| Web | Open https://jnazah07.github.io/arabic-dialects/ in any browser. |
+| Web | Open https://Jnazah07.github.io/arabic-dialects/ in any browser. |
 | Android | Download `ArabicDialects.apk` from the [Releases page](https://github.com/Jnazah07/arabic-dialects/releases) and install it (allow "install unknown apps" for your browser). |
 | Windows | Download `ArabicDialectsSetup.exe` from the [Releases page](https://github.com/Jnazah07/arabic-dialects/releases) and run it. Per-user install, no admin needed. |
-| iPhone / iPad | Open https://jnazah07.github.io/arabic-dialects/ in Safari, tap Share, then "Add to Home Screen". |
+| iPhone / iPad | Open https://Jnazah07.github.io/arabic-dialects/ in Safari, tap Share, then "Add to Home Screen". |
 | Any device, offline | Install it as a PWA from the browser menu ("Install app" or "Add to Home Screen"). The app then runs offline. |
 
 ## Dialects

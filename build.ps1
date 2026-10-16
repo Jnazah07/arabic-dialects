@@ -42,6 +42,9 @@ Write-Host ("Single file: {0} ({1:N0} bytes)" -f $singlePath, (Get-Item $singleP
 $zipPath = Join-Path $root 'arabic-dialects.zip'
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 $files = Get-ChildItem -Path $root -Recurse -File |
-    Where-Object { $_.Name -ne 'arabic-dialects.zip' -and $_.Name -ne 'build.ps1' -and $_.Name -ne 'arabic-dialects-single.html' }
+    Where-Object {
+        $_.Name -ne 'arabic-dialects.zip' -and $_.Name -ne 'build.ps1' -and $_.Name -ne 'arabic-dialects-single.html' -and
+        $_.FullName -notmatch '\\dist\\'
+    }
 Compress-Archive -Path $files.FullName -DestinationPath $zipPath -Force
 Write-Host ("Zip: {0} ({1:N0} bytes, {2} files)" -f $zipPath, (Get-Item $zipPath).Length, $files.Count)

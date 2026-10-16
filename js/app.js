@@ -35,6 +35,11 @@ const store = {
     }
 };
 
+// How many questions a single lesson asks. Each word is drilled twice, once in
+// each direction, so the learner both reads and produces the language.
+const REPS_PER_WORD = 2;
+const TEST_LENGTH = 20;
+
 class ArabicLearnApp {
     constructor() {
         this.state = {
@@ -43,9 +48,12 @@ class ArabicLearnApp {
             streak: parseInt(store.get('arabicLearn_streak', '0')) || 0,
             lastActiveDate: store.get('arabicLearn_lastActive', null),
             completedLessons: store.json('arabicLearn_completed', {}),
+            wordStats: store.json('arabicLearn_wordStats', {}),
+            mode: 'lesson',
             currentLesson: null,
+            questions: [],
             currentQuestionIndex: 0,
-            correctThisLesson: 0,
+            correctThisSession: 0,
             exercise: null,
             voices: []
         };
@@ -72,13 +80,14 @@ class ArabicLearnApp {
 
     cacheDom() {
         const ids = [
-            'onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen',
+            'onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen',
             'dialectGrid', 'dialectSelectProfile', 'headerDialectName',
             'streakCount', 'xpCount', 'userLevel', 'xpBarFill', 'unitsList',
             'lessonProgressFill', 'currentQ', 'totalQ', 'questionArea',
             'feedbackArea', 'feedbackText', 'autoTimer', 'autoTimerFill',
-            'skipBtn', 'closeLesson', 'profileStreak', 'profileXP',
-            'profileLevel', 'resetProgressBtn', 'bottomNav'
+            'skipBtn', 'closeLesson', 'lessonTitle', 'profileStreak', 'profileXP',
+            'profileLevel', 'resetProgressBtn', 'bottomNav',
+            'testWordsKnown', 'testAccuracy', 'testPoolInfo', 'testStartBtn'
         ];
         ids.forEach(id => {
             this.dom[id] = document.getElementById(id);
@@ -112,10 +121,10 @@ class ArabicLearnApp {
 
     // ---------- Screens ----------
     showScreen(name) {
-        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen'].forEach(id => {
+        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen'].forEach(id => {
             this.dom[id].classList.toggle('active', id === name);
         });
-        const showNav = name === 'homeScreen' || name === 'profileScreen';
+        const showNav = name === 'homeScreen' || name === 'profileScreen' || name === 'testScreen';
         this.dom.bottomNav.hidden = !showNav;
         document.body.classList.toggle('has-nav', showNav);
         window.scrollTo(0, 0);
@@ -205,7 +214,7 @@ class ArabicLearnApp {
                         <span class="unit-title">${unit.title}</span>
                         <span class="unit-status">${status}</span>
                     </div>
-                    <div class="unit-desc">${unit.desc} · ${unit.words.length} words</div>
+                    <div class="unit-desc">${unit.desc} · ${unit.words.length} words · ${unit.words.length * REPS_PER_WORD} questions</div>
                 </div>
             `;
 
@@ -226,11 +235,18 @@ class ArabicLearnApp {
 
     // ---------- Lesson engine ----------
     startLesson(unit) {
-        this.state.currentLesson = unit;
-        this.state.currentQuestionIndex = 0;
-        this.state.correctThisLesson = 0;
+        this.beginSession('lesson', unit.title, unit.words);
+    }
 
-        this.dom.totalQ.textContent = unit.words.length;
+    beginSession(mode, title, words) {
+        this.state.mode = mode;
+        this.state.currentLesson = { title, words };
+        this.state.questions = this.buildQuestions(words);
+        this.state.currentQuestionIndex = 0;
+        this.state.correctThisSession = 0;
+
+        this.dom.lessonTitle.textContent = title;
+        this.dom.totalQ.textContent = this.state.questions.length;
         this.dom.lessonProgressFill.style.width = '0%';
         this.dom.skipBtn.hidden = false;
 
@@ -238,31 +254,49 @@ class ArabicLearnApp {
         this.renderQuestion();
     }
 
-    // Build an exercise. Mixes two directions so the learner reads and produces.
-    buildExercise(word, allWords, index) {
-        const direction = index % 2 === 0 ? 'ar-en' : 'en-ar';
-        const pool = allWords.filter(w => w.en !== word.en);
+    // Every word is drilled once per direction, then the whole set is shuffled
+    // so the learner cannot predict the order.
+    buildQuestions(words) {
+        const questions = [];
+        words.forEach((word, i) => {
+            const first = i % 2 === 0 ? 'ar-en' : 'en-ar';
+            const second = first === 'ar-en' ? 'en-ar' : 'ar-en';
+            questions.push({ word, dir: first });
+            questions.push({ word, dir: second });
+            for (let r = 2; r < REPS_PER_WORD; r++) {
+                questions.push({ word, dir: r % 2 === 0 ? first : second });
+            }
+        });
+        return this.shuffle(questions);
+    }
+
+    buildExercise(word, dir) {
+        const pool = allWords.filter(w => w.en !== word.en && w.ar !== word.ar);
         const distractors = this.pickDistractors(pool, 3);
 
-        if (direction === 'ar-en') {
+        if (dir === 'ar-en') {
             const options = this.shuffle([word.en, ...distractors.map(w => w.en)]);
             return {
                 type: 'ar-en',
                 prompt: word.ar,
+                translit: word.tr,
                 speak: word.ar,
                 instruction: 'What does this mean?',
                 options,
-                answer: word.en
+                answer: word.en,
+                answerTranslit: ''
             };
         }
         const options = this.shuffle([word.ar, ...distractors.map(w => w.ar)]);
         return {
             type: 'en-ar',
             prompt: word.en,
+            translit: '',
             speak: null,
             instruction: 'Select the Arabic',
             options,
-            answer: word.ar
+            answer: word.ar,
+            answerTranslit: word.tr
         };
     }
 
@@ -274,15 +308,6 @@ class ArabicLearnApp {
             seen.add(w.en);
             picked.push(w);
             if (picked.length === n) break;
-        }
-        if (picked.length < n) {
-            const filler = Object.values(topicPool).flatMap(t => t.words);
-            for (const w of this.shuffle(filler)) {
-                if (seen.has(w.en)) continue;
-                seen.add(w.en);
-                picked.push(w);
-                if (picked.length === n) break;
-            }
         }
         return picked;
     }
@@ -311,14 +336,14 @@ class ArabicLearnApp {
         this.clearTimers();
         this._locked = false;
 
-        const unit = this.state.currentLesson;
-        const idx = this.state.currentQuestionIndex;
-        const word = unit.words[idx];
+        const q = this.state.questions[this.state.currentQuestionIndex];
+        const total = this.state.questions.length;
 
-        this.dom.currentQ.textContent = idx + 1;
-        this.dom.lessonProgressFill.style.width = (idx / unit.words.length) * 100 + '%';
+        this.dom.currentQ.textContent = this.state.currentQuestionIndex + 1;
+        this.dom.lessonProgressFill.style.width =
+            (this.state.currentQuestionIndex / total) * 100 + '%';
 
-        const exercise = this.buildExercise(word, unit.words, idx);
+        const exercise = this.buildExercise(q.word, q.dir);
         this.state.exercise = exercise;
 
         const area = this.dom.questionArea;
@@ -326,7 +351,10 @@ class ArabicLearnApp {
             <p class="question-instruction">${exercise.instruction}</p>
             <div class="prompt-row">
                 ${exercise.speak ? `<button class="speak-btn" id="speakBtn" aria-label="Play pronunciation">🔊</button>` : ''}
-                <div class="question-text"${exercise.type === 'en-ar' ? ' dir="ltr"' : ''}>${exercise.prompt}</div>
+                <div class="prompt-stack">
+                    <div class="question-text"${exercise.type === 'en-ar' ? ' dir="ltr"' : ''}>${exercise.prompt}</div>
+                    ${exercise.translit ? `<div class="prompt-translit">${exercise.translit}</div>` : ''}
+                </div>
             </div>
             <div class="choices" id="choices" role="group" aria-label="Answer choices"></div>
         `;
@@ -344,7 +372,6 @@ class ArabicLearnApp {
             btn.className = 'choice-btn';
             btn.textContent = option;
             btn.dataset.index = i;
-            if (exercise.type === 'ar-en') btn.setAttribute('dir', 'ltr');
             btn.addEventListener('click', () => this.selectChoice(option, btn));
             choicesDiv.appendChild(btn);
         });
@@ -361,7 +388,7 @@ class ArabicLearnApp {
         if (this._locked) return;
         this._locked = true;
 
-        const { answer, type } = this.state.exercise;
+        const { answer, type, answerTranslit } = this.state.exercise;
         const isCorrect = option === answer;
 
         document.querySelectorAll('.choice-btn').forEach(c => {
@@ -374,13 +401,16 @@ class ArabicLearnApp {
             }
         });
 
+        this.recordWordStat(this.state.questions[this.state.currentQuestionIndex].word, isCorrect);
+
         if (isCorrect) {
-            this.state.correctThisLesson++;
+            this.state.correctThisSession++;
             this.addXp(10);
             this.dom.feedbackText.textContent = 'Correct';
             this.dom.feedbackArea.className = 'feedback-area feedback-correct';
         } else {
-            this.dom.feedbackText.textContent = `Correct answer: ${answer}`;
+            const hint = answerTranslit ? ` (${answerTranslit})` : '';
+            this.dom.feedbackText.textContent = `Correct answer: ${answer}${hint}`;
             this.dom.feedbackArea.className = 'feedback-area feedback-wrong';
         }
 
@@ -413,48 +443,53 @@ class ArabicLearnApp {
     nextQuestion() {
         this.clearTimers();
         this.state.currentQuestionIndex++;
-        const unit = this.state.currentLesson;
-
-        if (this.state.currentQuestionIndex >= unit.words.length) {
-            this.completeLesson();
+        if (this.state.currentQuestionIndex >= this.state.questions.length) {
+            this.completeSession();
         } else {
             this.renderQuestion();
         }
     }
 
-    completeLesson() {
+    completeSession() {
         this.clearTimers();
-        const dialectId = this.state.currentDialect.id;
-        const unitId = this.state.currentLesson.id;
+        const total = this.state.questions.length;
+        const correct = this.state.correctThisSession;
+        const acc = total ? Math.round((correct / total) * 100) : 0;
+        const isTest = this.state.mode === 'test';
 
-        if (!this.state.completedLessons[dialectId]) this.state.completedLessons[dialectId] = [];
-        const firstTime = !this.state.completedLessons[dialectId].includes(unitId);
-        if (firstTime) {
-            this.state.completedLessons[dialectId].push(unitId);
-            this.addXp(50);
+        if (!isTest) {
+            const dialectId = this.state.currentDialect.id;
+            const unitId = this.state.currentLesson.id;
+            if (unitId != null) {
+                if (!this.state.completedLessons[dialectId]) this.state.completedLessons[dialectId] = [];
+                if (!this.state.completedLessons[dialectId].includes(unitId)) {
+                    this.state.completedLessons[dialectId].push(unitId);
+                    this.addXp(50);
+                }
+                store.set('arabicLearn_completed', JSON.stringify(this.state.completedLessons));
+            }
         }
-        store.set('arabicLearn_completed', JSON.stringify(this.state.completedLessons));
 
         this.dom.lessonProgressFill.style.width = '100%';
 
-        const total = this.state.currentLesson.words.length;
-        const acc = Math.round((this.state.correctThisLesson / total) * 100);
+        const title = isTest ? 'Test complete' : 'Lesson complete';
+        const emoji = isTest ? '📊' : '🎉';
 
         this.dom.questionArea.innerHTML = `
             <div class="complete-panel">
-                <div class="complete-emoji" aria-hidden="true">🎉</div>
-                <h2 class="complete-title">Lesson complete</h2>
+                <div class="complete-emoji" aria-hidden="true">${emoji}</div>
+                <h2 class="complete-title">${title}</h2>
                 <div class="complete-stats">
                     <div class="complete-stat">
                         <span class="complete-value">${acc}%</span>
                         <span class="complete-label">Accuracy</span>
                     </div>
                     <div class="complete-stat">
-                        <span class="complete-value">${this.state.correctThisLesson}/${total}</span>
+                        <span class="complete-value">${correct}/${total}</span>
                         <span class="complete-label">Correct</span>
                     </div>
                 </div>
-                <button class="btn btn-primary complete-btn" id="completeBtn">Back to lessons</button>
+                <button class="btn btn-primary complete-btn" id="completeBtn">${isTest ? 'Back to test' : 'Back to lessons'}</button>
             </div>
         `;
 
@@ -469,7 +504,106 @@ class ArabicLearnApp {
     closeLesson() {
         this.clearTimers();
         this._locked = false;
-        this.showHome();
+        if (this.state.mode === 'test') {
+            this.renderTestScreen();
+            this.showScreen('testScreen');
+            this.setNav('test');
+        } else {
+            this.showHome();
+        }
+    }
+
+    // ---------- Word mastery ----------
+    recordWordStat(word, isCorrect) {
+        if (!word) return;
+        const key = word.ar;
+        const rec = this.state.wordStats[key] || { ar: word.ar, en: word.en, seen: 0, correct: 0 };
+        rec.seen++;
+        if (isCorrect) rec.correct++;
+        rec.en = word.en;
+        this.state.wordStats[key] = rec;
+        store.set('arabicLearn_wordStats', JSON.stringify(this.state.wordStats));
+    }
+
+    // Words the learner has met. Weak words (low accuracy, or never seen in a
+    // test) are weighted higher so a test keeps drilling what is shaky.
+    learnedWords() {
+        const dialectId = this.state.currentDialect ? this.state.currentDialect.id : null;
+        const pool = [];
+        const lessons = lessonData[dialectId] || [];
+        const completed = this.state.completedLessons[dialectId] || [];
+        lessons.forEach(u => {
+            if (completed.includes(u.id)) pool.push(...u.words);
+        });
+        // Always include the dialect basics so a test is possible from day one.
+        if (lessons[0]) pool.push(...lessons[0].words);
+        // De-duplicate.
+        const seen = new Set();
+        return pool.filter(w => {
+            if (seen.has(w.ar)) return false;
+            seen.add(w.ar);
+            return true;
+        });
+    }
+
+    buildTestSet() {
+        const pool = this.learnedWords();
+        if (!pool.length) return [];
+        const weighted = pool.map(w => {
+            const rec = this.state.wordStats[w.ar];
+            let weight = 1;
+            if (rec && rec.seen > 0) {
+                const acc = rec.correct / rec.seen;
+                weight = 1 + (1 - acc) * 3; // weaker words come up more often
+            } else {
+                weight = 2; // never practised
+            }
+            return { w, weight };
+        });
+
+        const picked = [];
+        const used = new Set();
+        const n = Math.min(TEST_LENGTH, pool.length);
+        let guard = 0;
+        while (picked.length < n && guard < 5000) {
+            guard++;
+            const totalWeight = weighted.reduce((s, x) => s + (used.has(x.w.ar) ? 0 : x.weight), 0);
+            if (totalWeight <= 0) break;
+            let r = Math.random() * totalWeight;
+            for (const x of weighted) {
+                if (used.has(x.w.ar)) continue;
+                r -= x.weight;
+                if (r <= 0) {
+                    picked.push(x.w);
+                    used.add(x.w.ar);
+                    break;
+                }
+            }
+        }
+        return picked;
+    }
+
+    // ---------- Test screen ----------
+    renderTestScreen() {
+        const pool = this.learnedWords();
+        const stats = Object.values(this.state.wordStats);
+        const practised = stats.filter(s => s.seen > 0);
+        const totalSeen = practised.reduce((s, r) => s + r.seen, 0);
+        const totalCorrect = practised.reduce((s, r) => s + r.correct, 0);
+        const acc = totalSeen ? Math.round((totalCorrect / totalSeen) * 100) : 0;
+
+        this.dom.testWordsKnown.textContent = pool.length;
+        this.dom.testAccuracy.textContent = acc + '%';
+        this.dom.testPoolInfo.textContent = pool.length
+            ? `${pool.length} words unlocked in this dialect. A test asks ${Math.min(TEST_LENGTH, pool.length)} questions, focusing on the words you get wrong.`
+            : 'Finish a lesson first so there are words to test.';
+        this.dom.testStartBtn.disabled = pool.length === 0;
+    }
+
+    startTest() {
+        const words = this.buildTestSet();
+        if (!words.length) return;
+        this.beginSession('test', 'Test', words);
     }
 
     // ---------- Stats ----------
@@ -501,7 +635,8 @@ class ArabicLearnApp {
 
     updateBadges() {
         const totalLessons = Object.values(this.state.completedLessons).flat().length;
-        const rules = [totalLessons >= 5, this.state.streak >= 7, this.state.xp >= 1000];
+        const wordsKnown = Object.keys(this.state.wordStats).length;
+        const rules = [totalLessons >= 5, wordsKnown >= 100, this.state.xp >= 1000];
         document.querySelectorAll('.badge-item').forEach((badge, i) => {
             badge.classList.toggle('locked', !rules[i]);
         });
@@ -540,6 +675,7 @@ class ArabicLearnApp {
     bindEvents() {
         this.dom.skipBtn.addEventListener('click', () => this.nextQuestion());
         this.dom.closeLesson.addEventListener('click', () => this.closeLesson());
+        this.dom.testStartBtn.addEventListener('click', () => this.startTest());
 
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -548,6 +684,10 @@ class ArabicLearnApp {
                     this.updateStats();
                     this.showScreen('profileScreen');
                     this.setNav('profile');
+                } else if (btn.dataset.tab === 'test') {
+                    this.renderTestScreen();
+                    this.showScreen('testScreen');
+                    this.setNav('test');
                 } else {
                     this.showHome();
                 }

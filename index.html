@@ -75,6 +75,7 @@
         <header class="lesson-header">
             <button class="close-lesson" id="closeLesson">✕</button>
             <div class="lesson-progress">
+                <div class="lesson-title" id="lessonTitle"></div>
                 <div class="lesson-progress-bar">
                     <div class="lesson-progress-fill" id="lessonProgressFill" style="width: 0%"></div>
                 </div>
@@ -96,6 +97,30 @@
 
         <div class="lesson-actions">
             <button class="btn btn-secondary" id="skipBtn">Skip</button>
+        </div>
+    </div>
+
+    <!-- Test / Review Screen -->
+    <div id="testScreen" class="screen">
+        <header class="app-header">
+            <h2>Test Yourself</h2>
+        </header>
+        <div class="container">
+            <div class="test-card">
+                <p class="test-lead">A quick mixed quiz of everything you have unlocked. It repeats the words you get wrong until they stick.</p>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="testWordsKnown">0</span>
+                        <span class="stat-label">Words unlocked</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="testAccuracy">0%</span>
+                        <span class="stat-label">Accuracy so far</span>
+                    </div>
+                </div>
+                <p class="test-info" id="testPoolInfo"></p>
+                <button class="btn btn-primary" id="testStartBtn">Start test</button>
+            </div>
         </div>
     </div>
 
@@ -131,9 +156,9 @@
                         <span class="badge-icon">🏆</span>
                         <span class="badge-name">First Steps</span>
                     </div>
-                    <div class="badge-item locked" title="7 day streak">
-                        <span class="badge-icon">🔥</span>
-                        <span class="badge-name">Week Warrior</span>
+                    <div class="badge-item locked" title="Learn 100 words">
+                        <span class="badge-icon">📚</span>
+                        <span class="badge-name">Word Collector</span>
                     </div>
                     <div class="badge-item locked" title="1000 XP">
                         <span class="badge-icon">⭐</span>
@@ -164,6 +189,7 @@
 
     <nav class="bottom-nav" id="bottomNav" hidden>
         <button class="nav-btn active" data-tab="home">🏠 Lessons</button>
+        <button class="nav-btn" data-tab="test">📊 Test</button>
         <button class="nav-btn" data-tab="profile">👤 Profile</button>
     </nav>
 

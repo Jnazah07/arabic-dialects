@@ -2883,12 +2883,14 @@ class ArabicLearnApp {
 
     // ---------- Lesson engine ----------
     startLesson(unit) {
-        this.beginSession('lesson', unit.title, unit.words);
+        this.beginSession('lesson', unit.title, unit.words, unit.id);
     }
 
-    beginSession(mode, title, words) {
+    // unitId must survive into currentLesson: completeSession() reads it to mark
+    // the unit done, which is what unlocks the next one. Tests pass no id.
+    beginSession(mode, title, words, unitId = null) {
         this.state.mode = mode;
-        this.state.currentLesson = { title, words };
+        this.state.currentLesson = { id: unitId, title, words };
         this.state.questions = this.buildQuestions(words);
         this.state.currentQuestionIndex = 0;
         this.state.correctThisSession = 0;

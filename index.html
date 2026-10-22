@@ -89,6 +89,7 @@
             </div>
             <div class="feedback-area" id="feedbackArea" aria-live="polite">
                 <div class="feedback-text" id="feedbackText"></div>
+                <div class="root-note" id="rootNote" hidden></div>
                 <div class="auto-timer" id="autoTimer" hidden>
                     <div class="auto-timer-fill" id="autoTimerFill"></div>
                 </div>
@@ -187,13 +188,42 @@
         </div>
     </div>
 
+    <!-- Root & Pattern Screen -->
+    <div id="rootsScreen" class="screen">
+        <header class="app-header">
+            <h2>Root &amp; Pattern</h2>
+        </header>
+        <div class="container">
+            <p class="roots-lead">
+                Almost every Arabic word is a three-letter root poured into a pattern.
+                Learn the moulds and you stop memorising words one by one — you start
+                predicting words you have never seen.
+            </p>
+
+            <button class="btn btn-primary roots-cta" id="rootDrillBtn">Practise: guess the meaning</button>
+
+            <section class="roots-section">
+                <h3>The patterns <span class="roots-ar">الأوزان</span></h3>
+                <p class="roots-sub">Read ف ع ل as the three root letters.</p>
+                <div class="pattern-list" id="patternList"></div>
+            </section>
+
+            <section class="roots-section">
+                <h3>The roots <span class="roots-ar">الجذور</span></h3>
+                <div class="family-list" id="familyList"></div>
+            </section>
+        </div>
+    </div>
+
     <nav class="bottom-nav" id="bottomNav" hidden>
         <button class="nav-btn active" data-tab="home">🏠 Lessons</button>
+        <button class="nav-btn" data-tab="roots">🌱 Roots</button>
         <button class="nav-btn" data-tab="test">📊 Test</button>
         <button class="nav-btn" data-tab="profile">👤 Profile</button>
     </nav>
 
     <script src="data/dialects.js"></script>
+    <script src="data/roots.js"></script>
     <script src="data/lessonData.js"></script>
     <script src="js/app.js"></script>
     <script>

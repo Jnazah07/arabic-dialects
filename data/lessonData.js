@@ -1310,7 +1310,22 @@ const dialectWords = {
 const topicPool = {};
 coreUnits.forEach(u => { topicPool[u.key] = { title: u.title, desc: u.desc, words: u.words }; });
 
-const toWord = t => ({ ar: t[0], en: t[1], tr: t[2] || '' });
+// Attach the root and pattern when we know them, so a lesson can show the
+// machinery behind a word instead of treating it as an isolated fact.
+const toWord = t => {
+    const word = { ar: t[0], en: t[1], tr: t[2] || '' };
+    if (typeof WORD_MORPHOLOGY !== 'undefined' && typeof normArabic === 'function') {
+        const m = WORD_MORPHOLOGY[normArabic(word.ar)];
+        if (m) {
+            word.root = m.root;
+            word.rootMeaning = m.rootMeaning;
+            word.pattern = m.pattern;
+            word.patternLatin = m.patternLatin;
+            word.patternRole = m.role;
+        }
+    }
+    return word;
+};
 
 // Every word that exists anywhere, used to build distractors and reviews.
 const allWords = coreUnits.flatMap(u => u.words.map(toWord))

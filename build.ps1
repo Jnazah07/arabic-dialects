@@ -11,6 +11,7 @@ function Write-Text($path, $text) { [System.IO.File]::WriteAllText($path, $text,
 $css = Read-Text (Join-Path $root 'css/style.css')
 $js = @(
     (Read-Text (Join-Path $root 'data/dialects.js')),
+    (Read-Text (Join-Path $root 'data/roots.js')),
     (Read-Text (Join-Path $root 'data/lessonData.js')),
     (Read-Text (Join-Path $root 'js/app.js'))
 ) -join "`n"
@@ -23,12 +24,14 @@ $html = $html -replace '<link rel="stylesheet" href="css/style\.css">', "<style>
 # Inline the three scripts, in order.
 $scriptTags = @(
     '<script src="data/dialects.js"></script>',
+    '<script src="data/roots.js"></script>',
     '<script src="data/lessonData.js"></script>',
     '<script src="js/app.js"></script>'
 )
 $html = $html -replace [regex]::Escape($scriptTags[0]), "<script>`n$js`n</script>"
-$html = $html -replace [regex]::Escape($scriptTags[1]), ''
-$html = $html -replace [regex]::Escape($scriptTags[2]), ''
+for ($i = 1; $i -lt $scriptTags.Count; $i++) {
+    $html = $html -replace [regex]::Escape($scriptTags[$i]), ''
+}
 
 # A standalone file cannot use the manifest or service worker.
 $html = $html -replace '<link rel="manifest" href="manifest\.webmanifest">', ''

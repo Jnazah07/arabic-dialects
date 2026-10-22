@@ -39,6 +39,12 @@ const store = {
 // each direction, so the learner both reads and produces the language.
 const REPS_PER_WORD = 2;
 const TEST_LENGTH = 20;
+const ROOT_DRILL_LENGTH = 10;
+
+// Pause after an answer before the next question appears. Testers found the
+// old 900ms too tight to read the word, so both pauses gained 300ms.
+const ADVANCE_CORRECT_MS = 1200;
+const ADVANCE_WRONG_MS = 2100;
 
 class ArabicLearnApp {
     constructor() {
@@ -55,6 +61,9 @@ class ArabicLearnApp {
             currentQuestionIndex: 0,
             correctThisSession: 0,
             exercise: null,
+            showRoot: false,
+            pool: null,
+            dirs: null,
             voices: []
         };
 
@@ -81,13 +90,14 @@ class ArabicLearnApp {
     cacheDom() {
         const ids = [
             'onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen',
-            'dialectGrid', 'dialectSelectProfile', 'headerDialectName',
+            'rootsScreen', 'dialectGrid', 'dialectSelectProfile', 'headerDialectName',
             'streakCount', 'xpCount', 'userLevel', 'xpBarFill', 'unitsList',
             'lessonProgressFill', 'currentQ', 'totalQ', 'questionArea',
-            'feedbackArea', 'feedbackText', 'autoTimer', 'autoTimerFill',
+            'feedbackArea', 'feedbackText', 'rootNote', 'autoTimer', 'autoTimerFill',
             'skipBtn', 'closeLesson', 'lessonTitle', 'profileStreak', 'profileXP',
             'profileLevel', 'resetProgressBtn', 'bottomNav',
-            'testWordsKnown', 'testAccuracy', 'testPoolInfo', 'testStartBtn'
+            'testWordsKnown', 'testAccuracy', 'testPoolInfo', 'testStartBtn',
+            'patternList', 'familyList', 'rootDrillBtn'
         ];
         ids.forEach(id => {
             this.dom[id] = document.getElementById(id);
@@ -121,10 +131,11 @@ class ArabicLearnApp {
 
     // ---------- Screens ----------
     showScreen(name) {
-        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen'].forEach(id => {
+        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen', 'rootsScreen'].forEach(id => {
             this.dom[id].classList.toggle('active', id === name);
         });
-        const showNav = name === 'homeScreen' || name === 'profileScreen' || name === 'testScreen';
+        const showNav = name === 'homeScreen' || name === 'profileScreen' ||
+            name === 'testScreen' || name === 'rootsScreen';
         this.dom.bottomNav.hidden = !showNav;
         document.body.classList.toggle('has-nav', showNav);
         window.scrollTo(0, 0);
@@ -240,10 +251,14 @@ class ArabicLearnApp {
 
     // unitId must survive into currentLesson: completeSession() reads it to mark
     // the unit done, which is what unlocks the next one. Tests pass no id.
-    beginSession(mode, title, words, unitId = null) {
+    // options: { showRoot, dirs, pool } — used by the root-inference drill.
+    beginSession(mode, title, words, unitId = null, options = {}) {
         this.state.mode = mode;
         this.state.currentLesson = { id: unitId, title, words };
-        this.state.questions = this.buildQuestions(words);
+        this.state.showRoot = !!options.showRoot;
+        this.state.dirs = options.dirs || null;
+        this.state.pool = options.pool || null;
+        this.state.questions = this.buildQuestions(words, this.state.dirs);
         this.state.currentQuestionIndex = 0;
         this.state.correctThisSession = 0;
 
@@ -257,9 +272,13 @@ class ArabicLearnApp {
     }
 
     // Every word is drilled once per direction, then the whole set is shuffled
-    // so the learner cannot predict the order.
-    buildQuestions(words) {
+    // so the learner cannot predict the order. A caller can pin the directions.
+    buildQuestions(words, dirs = null) {
         const questions = [];
+        if (dirs) {
+            words.forEach(word => dirs.forEach(dir => questions.push({ word, dir })));
+            return this.shuffle(questions);
+        }
         words.forEach((word, i) => {
             const first = i % 2 === 0 ? 'ar-en' : 'en-ar';
             const second = first === 'ar-en' ? 'en-ar' : 'ar-en';
@@ -273,7 +292,10 @@ class ArabicLearnApp {
     }
 
     buildExercise(word, dir) {
-        const pool = allWords.filter(w => w.en !== word.en && w.ar !== word.ar);
+        // Lessons draw distractors from the whole curriculum; the root drill
+        // draws them from the root families so every option is a derived word.
+        const source = (this.state.pool && this.state.pool.length) ? this.state.pool : allWords;
+        const pool = source.filter(w => w.en !== word.en && w.ar !== word.ar);
         const distractors = this.pickDistractors(pool, 3);
 
         if (dir === 'ar-en') {
@@ -349,8 +371,15 @@ class ArabicLearnApp {
         this.state.exercise = exercise;
 
         const area = this.dom.questionArea;
+        const rootHint = (this.state.showRoot && q.word.root) ? `
+            <div class="root-hint">
+                <span class="root-chip"><span class="chip-label">Root</span> ${q.word.root} <span class="chip-gloss">${q.word.rootMeaning || ''}</span></span>
+                <span class="root-chip chip-pattern"><span class="chip-label">Pattern</span> ${q.word.pattern} <span class="chip-gloss">${q.word.patternRole || ''}</span></span>
+            </div>
+        ` : '';
         area.innerHTML = `
             <p class="question-instruction">${exercise.instruction}</p>
+            ${rootHint}
             <div class="prompt-row">
                 ${exercise.speak ? `<button class="speak-btn" id="speakBtn" aria-label="Play pronunciation">🔊</button>` : ''}
                 <div class="prompt-stack">
@@ -379,6 +408,7 @@ class ArabicLearnApp {
         });
 
         this.dom.feedbackText.textContent = '';
+        this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
         this.dom.autoTimerFill.classList.remove('correct', 'wrong');
@@ -418,9 +448,30 @@ class ArabicLearnApp {
 
         if (type === 'en-ar') this.speak(answer);
 
+        // Show the machinery behind the word, so the word is a pattern and not
+        // a one-off thing to memorise.
+        this.showRootNote(this.state.questions[this.state.currentQuestionIndex].word);
+
         // Auto-advance: short pause on a hit, longer on a miss so the
         // correct answer can be read.
-        this.autoAdvance(isCorrect ? 900 : 1800, isCorrect);
+        this.autoAdvance(isCorrect ? ADVANCE_CORRECT_MS : ADVANCE_WRONG_MS, isCorrect);
+    }
+
+    // "ك-ت-ب (writing) + مَفْعَل (the place) = مكتب · desk / office"
+    showRootNote(word) {
+        const note = this.dom.rootNote;
+        if (!note) return;
+        if (!word || !word.root) { this.clearRootNote(); return; }
+        note.hidden = false;
+        note.textContent =
+            `${word.root} (${word.rootMeaning}) + ${word.pattern} (${word.patternRole}) = ${word.ar} · ${word.en}`;
+    }
+
+    clearRootNote() {
+        const note = this.dom.rootNote;
+        if (!note) return;
+        note.hidden = true;
+        note.textContent = '';
     }
 
     autoAdvance(delay, isCorrect) {
@@ -458,6 +509,7 @@ class ArabicLearnApp {
         const correct = this.state.correctThisSession;
         const acc = total ? Math.round((correct / total) * 100) : 0;
         const isTest = this.state.mode === 'test';
+        const isRoots = this.state.mode === 'roots';
 
         if (!isTest) {
             const dialectId = this.state.currentDialect.id;
@@ -474,8 +526,8 @@ class ArabicLearnApp {
 
         this.dom.lessonProgressFill.style.width = '100%';
 
-        const title = isTest ? 'Test complete' : 'Lesson complete';
-        const emoji = isTest ? '📊' : '🎉';
+        const title = isTest ? 'Test complete' : isRoots ? 'Drill complete' : 'Lesson complete';
+        const emoji = isTest ? '📊' : isRoots ? '🌱' : '🎉';
 
         this.dom.questionArea.innerHTML = `
             <div class="complete-panel">
@@ -491,11 +543,12 @@ class ArabicLearnApp {
                         <span class="complete-label">Correct</span>
                     </div>
                 </div>
-                <button class="btn btn-primary complete-btn" id="completeBtn">${isTest ? 'Back to test' : 'Back to lessons'}</button>
+                <button class="btn btn-primary complete-btn" id="completeBtn">${isTest ? 'Back to test' : isRoots ? 'Back to roots' : 'Back to lessons'}</button>
             </div>
         `;
 
         this.dom.feedbackText.textContent = '';
+        this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
         this.dom.skipBtn.hidden = true;
@@ -510,6 +563,8 @@ class ArabicLearnApp {
             this.renderTestScreen();
             this.showScreen('testScreen');
             this.setNav('test');
+        } else if (this.state.mode === 'roots') {
+            this.renderRootsScreen();
         } else {
             this.showHome();
         }
@@ -583,6 +638,93 @@ class ArabicLearnApp {
             }
         }
         return picked;
+    }
+
+    // ---------- Root & Pattern ----------
+    renderRootsScreen() {
+        if (typeof ROOT_FAMILIES === 'undefined') {
+            this.dom.patternList.innerHTML = '<p class="roots-empty">Root data failed to load.</p>';
+            this.dom.familyList.innerHTML = '';
+            this.dom.rootDrillBtn.disabled = true;
+            this.showScreen('rootsScreen');
+            this.setNav('roots');
+            return;
+        }
+        this.renderPatternGuide();
+        this.renderRootFamilies();
+        this.dom.rootDrillBtn.disabled = this.rootDrillPool().length < 4;
+        this.showScreen('rootsScreen');
+        this.setNav('roots');
+    }
+
+    renderPatternGuide() {
+        const list = this.dom.patternList;
+        list.innerHTML = '';
+        (typeof PATTERN_GUIDE !== 'undefined' ? PATTERN_GUIDE : []).forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'pattern-row';
+            row.innerHTML = `
+                <span class="pattern-mould" dir="rtl">${p.pattern}</span>
+                <span class="pattern-body">
+                    <span class="pattern-role">${p.role}</span>
+                    <span class="pattern-example">${p.example} · ${p.exampleEn}</span>
+                </span>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    renderRootFamilies() {
+        const list = this.dom.familyList;
+        list.innerHTML = '';
+        ROOT_FAMILIES.forEach(family => {
+            const card = document.createElement('div');
+            card.className = 'family-card';
+            const forms = family.forms.map(f => `
+                <li class="form-row">
+                    <button class="form-word" type="button" data-ar="${f.ar}" aria-label="Hear ${f.ar}">${f.ar}</button>
+                    <span class="form-meta">
+                        <span class="form-en">${f.en}</span>
+                        <span class="form-pattern">${f.pattern}<span class="form-role"> · ${f.role}</span></span>
+                    </span>
+                </li>
+            `).join('');
+            card.innerHTML = `
+                <div class="family-head">
+                    <span class="family-root" dir="rtl">${family.root}</span>
+                    <span class="family-meaning">${family.meaning}</span>
+                </div>
+                <ul class="form-list">${forms}</ul>
+            `;
+            card.querySelectorAll('.form-word').forEach(btn => {
+                btn.addEventListener('click', () => this.speak(btn.dataset.ar));
+            });
+            list.appendChild(card);
+        });
+    }
+
+    // Forms the learner has never met in this dialect make the best inference
+    // questions: they have to use the root and pattern, not recall.
+    rootDrillPool() {
+        if (typeof ROOT_FORM_LIST === 'undefined') return [];
+        const dialectId = this.state.currentDialect ? this.state.currentDialect.id : null;
+        const known = new Set();
+        (lessonData[dialectId] || []).forEach(unit => {
+            unit.words.forEach(w => known.add(normArabic(w.ar)));
+        });
+        const unseen = ROOT_FORM_LIST.filter(w => !known.has(normArabic(w.ar)));
+        return unseen.length >= 6 ? unseen : ROOT_FORM_LIST;
+    }
+
+    startRootDrill() {
+        const pool = this.rootDrillPool();
+        if (pool.length < 4) return;
+        const words = this.shuffle(pool).slice(0, Math.min(ROOT_DRILL_LENGTH, pool.length));
+        this.beginSession('roots', 'Root & Pattern', words, null, {
+            showRoot: true,
+            dirs: ['ar-en'],
+            pool
+        });
     }
 
     // ---------- Test screen ----------
@@ -678,6 +820,7 @@ class ArabicLearnApp {
         this.dom.skipBtn.addEventListener('click', () => this.nextQuestion());
         this.dom.closeLesson.addEventListener('click', () => this.closeLesson());
         this.dom.testStartBtn.addEventListener('click', () => this.startTest());
+        this.dom.rootDrillBtn.addEventListener('click', () => this.startRootDrill());
 
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -690,6 +833,8 @@ class ArabicLearnApp {
                     this.renderTestScreen();
                     this.showScreen('testScreen');
                     this.setNav('test');
+                } else if (btn.dataset.tab === 'roots') {
+                    this.renderRootsScreen();
                 } else {
                     this.showHome();
                 }

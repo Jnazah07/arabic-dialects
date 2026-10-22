@@ -1083,6 +1083,262 @@ body.has-nav {
     width: 100%;
 }
 
+/* ---------- Root & Pattern (الجذر والوزن) ---------- */
+
+/* In-lesson hint: shown during the inference drill, above the choices. */
+.root-hint {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-xs);
+}
+
+.root-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.root-chip.chip-pattern {
+    border-color: rgba(206, 130, 255, 0.4);
+    background: rgba(206, 130, 255, 0.08);
+}
+
+.chip-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.chip-gloss {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+/* Post-answer explanation, sits under the feedback line. */
+.root-note {
+    max-width: 520px;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+}
+
+.root-note[hidden] {
+    display: none;
+}
+
+/* Reference screen */
+.roots-lead {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+}
+
+.roots-cta {
+    width: 100%;
+    margin-bottom: var(--spacing-lg);
+}
+
+.roots-section {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.roots-section h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+}
+
+.roots-ar {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.roots-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: var(--spacing-xs) 0 var(--spacing-md);
+}
+
+.roots-empty {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.pattern-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.pattern-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.pattern-row:last-child {
+    border-bottom: none;
+}
+
+.pattern-mould {
+    flex: 0 0 auto;
+    min-width: 96px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--purple);
+}
+
+.pattern-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.pattern-role {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.pattern-example {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.family-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.family-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.family-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.family-root {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.family-meaning {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.form-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 var(--spacing-md);
+}
+
+.form-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-row:last-child {
+    border-bottom: none;
+}
+
+.form-word {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 6px;
+    min-height: 32px;
+    transition: color 120ms ease-out;
+}
+
+.form-word:hover {
+    color: var(--accent-hover);
+}
+
+.form-word:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.form-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    min-width: 0;
+    text-align: left;
+}
+
+.form-en {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.form-pattern {
+    font-size: 0.75rem;
+    color: var(--purple);
+}
+
+.form-role {
+    color: var(--text-muted);
+}
+
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .form-meta {
+        align-items: flex-start;
+        text-align: right;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -1156,6 +1412,7 @@ body.has-nav {
             </div>
             <div class="feedback-area" id="feedbackArea" aria-live="polite">
                 <div class="feedback-text" id="feedbackText"></div>
+                <div class="root-note" id="rootNote" hidden></div>
                 <div class="auto-timer" id="autoTimer" hidden>
                     <div class="auto-timer-fill" id="autoTimerFill"></div>
                 </div>
@@ -1254,8 +1511,36 @@ body.has-nav {
         </div>
     </div>
 
+    <!-- Root & Pattern Screen -->
+    <div id="rootsScreen" class="screen">
+        <header class="app-header">
+            <h2>Root &amp; Pattern</h2>
+        </header>
+        <div class="container">
+            <p class="roots-lead">
+                Almost every Arabic word is a three-letter root poured into a pattern.
+                Learn the moulds and you stop memorising words one by one — you start
+                predicting words you have never seen.
+            </p>
+
+            <button class="btn btn-primary roots-cta" id="rootDrillBtn">Practise: guess the meaning</button>
+
+            <section class="roots-section">
+                <h3>The patterns <span class="roots-ar">الأوزان</span></h3>
+                <p class="roots-sub">Read ف ع ل as the three root letters.</p>
+                <div class="pattern-list" id="patternList"></div>
+            </section>
+
+            <section class="roots-section">
+                <h3>The roots <span class="roots-ar">الجذور</span></h3>
+                <div class="family-list" id="familyList"></div>
+            </section>
+        </div>
+    </div>
+
     <nav class="bottom-nav" id="bottomNav" hidden>
         <button class="nav-btn active" data-tab="home">🏠 Lessons</button>
+        <button class="nav-btn" data-tab="roots">🌱 Roots</button>
         <button class="nav-btn" data-tab="test">📊 Test</button>
         <button class="nav-btn" data-tab="profile">👤 Profile</button>
     </nav>
@@ -1300,6 +1585,247 @@ const dialects = [
     { id: 'djiboutian', nameAr: 'اللهجة الجيبوتية', nameEn: 'Djiboutian Arabic', flag: '🇩🇯', region: 'Horn' },
     { id: 'somalian', nameAr: 'اللهجة الصومالية', nameEn: 'Somali Arabic', flag: '🇸🇴', region: 'Horn' },
 ];
+// Root & Pattern layer (الجذر والوزن).
+//
+// Arabic vocabulary is not a list of unrelated words. Almost every word is a
+// three-letter root (الجذر) poured into a pattern (الوزن). Learn a few patterns
+// and you can often guess a word you have never seen.
+//
+//   ك-ت-ب  = the idea of "writing"
+//   مَفْعَل  = "the place where ..."   ->  مَكْتَب   = desk / office
+//   فَاعِل   = "the one who ..."       ->  كَاتِب   = writer
+//   مَفْعُول = "the one that was ..."  ->  مَكْتُوب = written
+//
+// This file owns the linguistics. Words in lessonData.js pick up their root and
+// pattern automatically via WORD_MORPHOLOGY, keyed on a normalised spelling.
+
+// Normalise an Arabic spelling so lookups survive optional diacritics and the
+// usual alef/ya/ta-marbuta variants. Both sides of a lookup go through this.
+function normArabic(value) {
+    return String(value || '')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
+        .replace(/[\u0622\u0623\u0625\u0671]/g, '\u0627')
+        .replace(/\u0649/g, '\u064A')
+        .replace(/\u0629/g, '\u0647')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// The patterns themselves. `pattern` is written with ف / ع / ل standing in for
+// the three root letters, which is the classical mizan notation.
+const PATTERN_GUIDE = [
+    { pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer', example: 'كَاتِب', exampleEn: 'writer' },
+    { pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to', example: 'مَكْتُوب', exampleEn: 'written' },
+    { pattern: 'مَفْعَل', latin: 'mafʿal', role: 'the place', example: 'مَكْتَب', exampleEn: 'office' },
+    { pattern: 'مَفْعِل', latin: 'mafʿil', role: 'the place (with a kasra)', example: 'مَسْجِد', exampleEn: 'mosque' },
+    { pattern: 'مَفْعَلَة', latin: 'mafʿala', role: 'the place or institution', example: 'مَكْتَبَة', exampleEn: 'library' },
+    { pattern: 'مِفْعَال', latin: 'mifʿāl', role: 'the tool you do it with', example: 'مِفْتَاح', exampleEn: 'key' },
+    { pattern: 'فِعَال', latin: 'fiʿāl', role: 'the thing itself', example: 'كِتَاب', exampleEn: 'book' },
+    { pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality, usually an adjective', example: 'كَبِير', exampleEn: 'big' },
+    { pattern: 'فَعَّال', latin: 'faʿʿāl', role: 'the one who does it as a trade', example: 'طَبَّاخ', exampleEn: 'cook' },
+    { pattern: 'مُفَعِّل', latin: 'mufaʿʿil', role: 'the one doing it (form II)', example: 'مُعَلِّم', exampleEn: 'teacher' },
+    { pattern: 'تَفْعِيل', latin: 'tafʿīl', role: 'the act of doing it (form II)', example: 'تَعْلِيم', exampleEn: 'teaching' },
+    { pattern: 'أَفْعَل', latin: 'afʿal', role: 'the comparison: more ...', example: 'أَكْبَر', exampleEn: 'bigger' }
+];
+
+// Curated root families. Every form here is a real word with a real pattern;
+// nothing is generated by algorithm.
+const ROOT_FAMILIES = [
+    {
+        root: 'ك-ت-ب',
+        meaning: 'writing',
+        forms: [
+            { ar: 'كتب', tr: 'kataba', en: 'He wrote', pattern: 'فَعَلَ', latin: 'faʿala', role: 'past verb' },
+            { ar: 'يكتب', tr: 'yaktub', en: 'He writes', pattern: 'يَفْعُل', latin: 'yafʿul', role: 'present verb' },
+            { ar: 'كتاب', tr: 'kitaab', en: 'Book', pattern: 'فِعَال', latin: 'fiʿāl', role: 'the thing itself' },
+            { ar: 'كاتب', tr: 'kaatib', en: 'Writer', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'مكتوب', tr: 'maktoob', en: 'Written; a letter', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' },
+            { ar: 'مكتب', tr: 'maktab', en: 'Desk; office', pattern: 'مَفْعَل', latin: 'mafʿal', role: 'the place' },
+            { ar: 'مكتبة', tr: 'maktaba', en: 'Library; bookshop', pattern: 'مَفْعَلَة', latin: 'mafʿala', role: 'the place or institution' }
+        ]
+    },
+    {
+        root: 'د-ر-س',
+        meaning: 'studying',
+        forms: [
+            { ar: 'درس', tr: 'dars', en: 'Lesson', pattern: 'فَعْل', latin: 'faʿl', role: 'the thing itself' },
+            { ar: 'يدرس', tr: 'yadrus', en: 'He studies', pattern: 'يَفْعُل', latin: 'yafʿul', role: 'present verb' },
+            { ar: 'مدرسة', tr: 'madrasa', en: 'School', pattern: 'مَفْعَلَة', latin: 'mafʿala', role: 'the place or institution' },
+            { ar: 'مدرس', tr: 'mudarris', en: 'Teacher', pattern: 'مُفَعِّل', latin: 'mufaʿʿil', role: 'the one doing it (form II)' },
+            { ar: 'دارس', tr: 'daaris', en: 'One who studies', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'دراسة', tr: 'diraasa', en: 'Study', pattern: 'فِعَالَة', latin: 'fiʿāla', role: 'the act of doing it' }
+        ]
+    },
+    {
+        root: 'ع-ل-م',
+        meaning: 'knowing',
+        forms: [
+            { ar: 'علم', tr: 'ilm', en: 'Knowledge; science', pattern: 'فَعْل', latin: 'faʿl', role: 'the thing itself' },
+            { ar: 'عالم', tr: 'aalim', en: 'Scholar', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'معلوم', tr: 'maloom', en: 'Known', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' },
+            { ar: 'معلم', tr: 'muallim', en: 'Teacher', pattern: 'مُفَعِّل', latin: 'mufaʿʿil', role: 'the one doing it (form II)' },
+            { ar: 'تعليم', tr: 'taleem', en: 'Teaching', pattern: 'تَفْعِيل', latin: 'tafʿīl', role: 'the act of doing it (form II)' },
+            { ar: 'يتعلم', tr: 'yataallam', en: 'He learns', pattern: 'يَتَفَعَّل', latin: 'yatafaʿʿal', role: 'present verb (form V)' }
+        ]
+    },
+    {
+        root: 'ف-ت-ح',
+        meaning: 'opening',
+        forms: [
+            { ar: 'فتح', tr: 'fataha', en: 'He opened', pattern: 'فَعَلَ', latin: 'faʿala', role: 'past verb' },
+            { ar: 'يفتح', tr: 'yaftah', en: 'He opens', pattern: 'يَفْعَل', latin: 'yafʿal', role: 'present verb' },
+            { ar: 'مفتاح', tr: 'miftaah', en: 'Key', pattern: 'مِفْعَال', latin: 'mifʿāl', role: 'the tool you do it with' },
+            { ar: 'مفتوح', tr: 'maftooh', en: 'Open', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' },
+            { ar: 'فاتح', tr: 'faatih', en: 'Opener; conqueror', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'افتتاح', tr: 'iftitaah', en: 'Opening (ceremony)', pattern: 'اِفْتِعَال', latin: 'iftiʿāl', role: 'the act of doing it (form VIII)' }
+        ]
+    },
+    {
+        root: 'ش-ر-ب',
+        meaning: 'drinking',
+        forms: [
+            { ar: 'شرب', tr: 'shariba', en: 'He drank', pattern: 'فَعِلَ', latin: 'faʿila', role: 'past verb' },
+            { ar: 'يشرب', tr: 'yashrab', en: 'He drinks', pattern: 'يَفْعَل', latin: 'yafʿal', role: 'present verb' },
+            { ar: 'شراب', tr: 'sharaab', en: 'Drink', pattern: 'فَعَال', latin: 'faʿāl', role: 'the thing itself' },
+            { ar: 'شارب', tr: 'shaarib', en: 'Drinker', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'مشروب', tr: 'mashroob', en: 'Beverage', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' }
+        ]
+    },
+    {
+        root: 'ط-ب-خ',
+        meaning: 'cooking',
+        forms: [
+            { ar: 'طبخ', tr: 'tabakha', en: 'He cooked', pattern: 'فَعَلَ', latin: 'faʿala', role: 'past verb' },
+            { ar: 'يطبخ', tr: 'yatbukh', en: 'He cooks', pattern: 'يَفْعُل', latin: 'yafʿul', role: 'present verb' },
+            { ar: 'مطبخ', tr: 'matbakh', en: 'Kitchen', pattern: 'مَفْعَل', latin: 'mafʿal', role: 'the place' },
+            { ar: 'طباخ', tr: 'tabbaakh', en: 'Cook', pattern: 'فَعَّال', latin: 'faʿʿāl', role: 'the one who does it as a trade' },
+            { ar: 'مطبوخ', tr: 'matbookh', en: 'Cooked', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' }
+        ]
+    },
+    {
+        root: 'ط-ع-م',
+        meaning: 'food and taste',
+        forms: [
+            { ar: 'طعام', tr: 'ta-aam', en: 'Food', pattern: 'فَعَال', latin: 'faʿāl', role: 'the thing itself' },
+            { ar: 'طعم', tr: 'ta-m', en: 'Taste', pattern: 'فَعْل', latin: 'faʿl', role: 'the thing itself' },
+            { ar: 'يطعم', tr: 'yat-am', en: 'He eats; he feeds', pattern: 'يَفْعَل', latin: 'yafʿal', role: 'present verb' },
+            { ar: 'مطعم', tr: 'mat-am', en: 'Restaurant', pattern: 'مَفْعَل', latin: 'mafʿal', role: 'the place' }
+        ]
+    },
+    {
+        root: 'س-م-ع',
+        meaning: 'hearing',
+        forms: [
+            { ar: 'سمع', tr: 'samia', en: 'He heard', pattern: 'فَعِلَ', latin: 'faʿila', role: 'past verb' },
+            { ar: 'يسمع', tr: 'yasma', en: 'He hears', pattern: 'يَفْعَل', latin: 'yafʿal', role: 'present verb' },
+            { ar: 'سماع', tr: 'samaa', en: 'Hearing', pattern: 'فَعَال', latin: 'faʿāl', role: 'the act of doing it' },
+            { ar: 'سامع', tr: 'saami', en: 'Hearer', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'مسموع', tr: 'masmoo', en: 'Heard', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' },
+            { ar: 'مستمع', tr: 'mustami', en: 'Listener', pattern: 'مُسْتَفْعِل', latin: 'mustafʿil', role: 'the doer (form VIII)' }
+        ]
+    },
+    {
+        root: 'ع-م-ل',
+        meaning: 'working',
+        forms: [
+            { ar: 'عمل', tr: 'amal', en: 'Work', pattern: 'فَعْل', latin: 'faʿl', role: 'the thing itself' },
+            { ar: 'يعمل', tr: 'yaamal', en: 'He works', pattern: 'يَفْعَل', latin: 'yafʿal', role: 'present verb' },
+            { ar: 'عامل', tr: 'aamil', en: 'Worker', pattern: 'فَاعِل', latin: 'fāʿil', role: 'the doer' },
+            { ar: 'معمول', tr: 'ma-mool', en: 'Made; done', pattern: 'مَفْعُول', latin: 'mafʿūl', role: 'the one done to' },
+            { ar: 'معمل', tr: 'ma-mal', en: 'Factory', pattern: 'مَفْعَل', latin: 'mafʿal', role: 'the place' }
+        ]
+    },
+    {
+        root: 'ك-ب-ر',
+        meaning: 'being big',
+        forms: [
+            { ar: 'كبير', tr: 'kabeer', en: 'Big', pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality' },
+            { ar: 'أكبر', tr: 'akbar', en: 'Bigger', pattern: 'أَفْعَل', latin: 'afʿal', role: 'the comparison' },
+            { ar: 'تكبير', tr: 'takbeer', en: 'Magnifying', pattern: 'تَفْعِيل', latin: 'tafʿīl', role: 'the act of doing it (form II)' },
+            { ar: 'يكبر', tr: 'yakbur', en: 'He grows', pattern: 'يَفْعُل', latin: 'yafʿul', role: 'present verb' }
+        ]
+    },
+    {
+        root: 'ج-م-ل',
+        meaning: 'beauty',
+        forms: [
+            { ar: 'جميل', tr: 'jameel', en: 'Beautiful', pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality' },
+            { ar: 'جمال', tr: 'jamaal', en: 'Beauty', pattern: 'فَعَال', latin: 'faʿāl', role: 'the quality as a noun' },
+            { ar: 'أجمل', tr: 'ajmal', en: 'More beautiful', pattern: 'أَفْعَل', latin: 'afʿal', role: 'the comparison' }
+        ]
+    },
+    {
+        root: 'ن-ظ-ف',
+        meaning: 'cleanliness',
+        forms: [
+            { ar: 'نظيف', tr: 'nadeef', en: 'Clean', pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality' },
+            { ar: 'نظافة', tr: 'nadaafa', en: 'Cleanliness', pattern: 'فَعَالَة', latin: 'faʿāla', role: 'the quality as a noun' },
+            { ar: 'ينظف', tr: 'yunaddif', en: 'He cleans', pattern: 'يُفَعِّل', latin: 'yufaʿʿil', role: 'present verb (form II)' },
+            { ar: 'تنظيف', tr: 'tandheef', en: 'Cleaning', pattern: 'تَفْعِيل', latin: 'tafʿīl', role: 'the act of doing it (form II)' }
+        ]
+    },
+    {
+        root: 'ص-غ-ر',
+        meaning: 'being small',
+        forms: [
+            { ar: 'صغير', tr: 'sagheer', en: 'Small', pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality' },
+            { ar: 'أصغر', tr: 'asghar', en: 'Smaller', pattern: 'أَفْعَل', latin: 'afʿal', role: 'the comparison' },
+            { ar: 'تصغير', tr: 'tasgheer', en: 'Making small', pattern: 'تَفْعِيل', latin: 'tafʿīl', role: 'the act of doing it (form II)' }
+        ]
+    },
+    {
+        root: 'س-ر-ع',
+        meaning: 'speed',
+        forms: [
+            { ar: 'سريع', tr: 'saree', en: 'Fast', pattern: 'فَعِيل', latin: 'faʿīl', role: 'the quality' },
+            { ar: 'سرعة', tr: 'sur-a', en: 'Speed', pattern: 'فُعْلَة', latin: 'fuʿla', role: 'the quality as a noun' },
+            { ar: 'يسرع', tr: 'yusri', en: 'He hurries', pattern: 'يُفْعِل', latin: 'yufʿil', role: 'present verb (form IV)' }
+        ]
+    }
+];
+
+// Portuguese-style flat index: normalised Arabic spelling -> morphology.
+// lessonData.js reads this when it builds each word object.
+const WORD_MORPHOLOGY = {};
+ROOT_FAMILIES.forEach(family => {
+    family.forms.forEach(form => {
+        const key = normArabic(form.ar);
+        if (!WORD_MORPHOLOGY[key]) {
+            WORD_MORPHOLOGY[key] = {
+                root: family.root,
+                rootMeaning: family.meaning,
+                pattern: form.pattern,
+                patternLatin: form.latin,
+                role: form.role
+            };
+        }
+    });
+});
+
+// Flat, de-duplicated list of every form, used by the inference drill.
+const ROOT_FORM_LIST = (() => {
+    const seen = new Set();
+    const list = [];
+    ROOT_FAMILIES.forEach(family => {
+        family.forms.forEach(form => {
+            const key = normArabic(form.ar);
+            if (seen.has(key)) return;
+            seen.add(key);
+            list.push({
+                ar: form.ar,
+                tr: form.tr,
+                en: form.en,
+                root: family.root,
+                rootMeaning: family.meaning,
+                pattern: form.pattern,
+                patternLatin: form.latin,
+                patternRole: form.role
+            });
+        });
+    });
+    return list;
+})();
+
 // Lesson data: a large shared Arabic core plus dialect-specific vocabulary.
 // Every word is [ar, en, tr] (Arabic, English, transliteration).
 // The core set is standard Arabic that every speaker understands; the dialect
@@ -2612,7 +3138,22 @@ const dialectWords = {
 const topicPool = {};
 coreUnits.forEach(u => { topicPool[u.key] = { title: u.title, desc: u.desc, words: u.words }; });
 
-const toWord = t => ({ ar: t[0], en: t[1], tr: t[2] || '' });
+// Attach the root and pattern when we know them, so a lesson can show the
+// machinery behind a word instead of treating it as an isolated fact.
+const toWord = t => {
+    const word = { ar: t[0], en: t[1], tr: t[2] || '' };
+    if (typeof WORD_MORPHOLOGY !== 'undefined' && typeof normArabic === 'function') {
+        const m = WORD_MORPHOLOGY[normArabic(word.ar)];
+        if (m) {
+            word.root = m.root;
+            word.rootMeaning = m.rootMeaning;
+            word.pattern = m.pattern;
+            word.patternLatin = m.patternLatin;
+            word.patternRole = m.role;
+        }
+    }
+    return word;
+};
 
 // Every word that exists anywhere, used to build distractors and reviews.
 const allWords = coreUnits.flatMap(u => u.words.map(toWord))
@@ -2687,6 +3228,12 @@ const store = {
 // each direction, so the learner both reads and produces the language.
 const REPS_PER_WORD = 2;
 const TEST_LENGTH = 20;
+const ROOT_DRILL_LENGTH = 10;
+
+// Pause after an answer before the next question appears. Testers found the
+// old 900ms too tight to read the word, so both pauses gained 300ms.
+const ADVANCE_CORRECT_MS = 1200;
+const ADVANCE_WRONG_MS = 2100;
 
 class ArabicLearnApp {
     constructor() {
@@ -2703,6 +3250,9 @@ class ArabicLearnApp {
             currentQuestionIndex: 0,
             correctThisSession: 0,
             exercise: null,
+            showRoot: false,
+            pool: null,
+            dirs: null,
             voices: []
         };
 
@@ -2729,13 +3279,14 @@ class ArabicLearnApp {
     cacheDom() {
         const ids = [
             'onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen',
-            'dialectGrid', 'dialectSelectProfile', 'headerDialectName',
+            'rootsScreen', 'dialectGrid', 'dialectSelectProfile', 'headerDialectName',
             'streakCount', 'xpCount', 'userLevel', 'xpBarFill', 'unitsList',
             'lessonProgressFill', 'currentQ', 'totalQ', 'questionArea',
-            'feedbackArea', 'feedbackText', 'autoTimer', 'autoTimerFill',
+            'feedbackArea', 'feedbackText', 'rootNote', 'autoTimer', 'autoTimerFill',
             'skipBtn', 'closeLesson', 'lessonTitle', 'profileStreak', 'profileXP',
             'profileLevel', 'resetProgressBtn', 'bottomNav',
-            'testWordsKnown', 'testAccuracy', 'testPoolInfo', 'testStartBtn'
+            'testWordsKnown', 'testAccuracy', 'testPoolInfo', 'testStartBtn',
+            'patternList', 'familyList', 'rootDrillBtn'
         ];
         ids.forEach(id => {
             this.dom[id] = document.getElementById(id);
@@ -2769,10 +3320,11 @@ class ArabicLearnApp {
 
     // ---------- Screens ----------
     showScreen(name) {
-        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen'].forEach(id => {
+        ['onboardingScreen', 'homeScreen', 'lessonScreen', 'profileScreen', 'testScreen', 'rootsScreen'].forEach(id => {
             this.dom[id].classList.toggle('active', id === name);
         });
-        const showNav = name === 'homeScreen' || name === 'profileScreen' || name === 'testScreen';
+        const showNav = name === 'homeScreen' || name === 'profileScreen' ||
+            name === 'testScreen' || name === 'rootsScreen';
         this.dom.bottomNav.hidden = !showNav;
         document.body.classList.toggle('has-nav', showNav);
         window.scrollTo(0, 0);
@@ -2888,10 +3440,14 @@ class ArabicLearnApp {
 
     // unitId must survive into currentLesson: completeSession() reads it to mark
     // the unit done, which is what unlocks the next one. Tests pass no id.
-    beginSession(mode, title, words, unitId = null) {
+    // options: { showRoot, dirs, pool } — used by the root-inference drill.
+    beginSession(mode, title, words, unitId = null, options = {}) {
         this.state.mode = mode;
         this.state.currentLesson = { id: unitId, title, words };
-        this.state.questions = this.buildQuestions(words);
+        this.state.showRoot = !!options.showRoot;
+        this.state.dirs = options.dirs || null;
+        this.state.pool = options.pool || null;
+        this.state.questions = this.buildQuestions(words, this.state.dirs);
         this.state.currentQuestionIndex = 0;
         this.state.correctThisSession = 0;
 
@@ -2905,9 +3461,13 @@ class ArabicLearnApp {
     }
 
     // Every word is drilled once per direction, then the whole set is shuffled
-    // so the learner cannot predict the order.
-    buildQuestions(words) {
+    // so the learner cannot predict the order. A caller can pin the directions.
+    buildQuestions(words, dirs = null) {
         const questions = [];
+        if (dirs) {
+            words.forEach(word => dirs.forEach(dir => questions.push({ word, dir })));
+            return this.shuffle(questions);
+        }
         words.forEach((word, i) => {
             const first = i % 2 === 0 ? 'ar-en' : 'en-ar';
             const second = first === 'ar-en' ? 'en-ar' : 'ar-en';
@@ -2921,7 +3481,10 @@ class ArabicLearnApp {
     }
 
     buildExercise(word, dir) {
-        const pool = allWords.filter(w => w.en !== word.en && w.ar !== word.ar);
+        // Lessons draw distractors from the whole curriculum; the root drill
+        // draws them from the root families so every option is a derived word.
+        const source = (this.state.pool && this.state.pool.length) ? this.state.pool : allWords;
+        const pool = source.filter(w => w.en !== word.en && w.ar !== word.ar);
         const distractors = this.pickDistractors(pool, 3);
 
         if (dir === 'ar-en') {
@@ -2997,8 +3560,15 @@ class ArabicLearnApp {
         this.state.exercise = exercise;
 
         const area = this.dom.questionArea;
+        const rootHint = (this.state.showRoot && q.word.root) ? `
+            <div class="root-hint">
+                <span class="root-chip"><span class="chip-label">Root</span> ${q.word.root} <span class="chip-gloss">${q.word.rootMeaning || ''}</span></span>
+                <span class="root-chip chip-pattern"><span class="chip-label">Pattern</span> ${q.word.pattern} <span class="chip-gloss">${q.word.patternRole || ''}</span></span>
+            </div>
+        ` : '';
         area.innerHTML = `
             <p class="question-instruction">${exercise.instruction}</p>
+            ${rootHint}
             <div class="prompt-row">
                 ${exercise.speak ? `<button class="speak-btn" id="speakBtn" aria-label="Play pronunciation">🔊</button>` : ''}
                 <div class="prompt-stack">
@@ -3027,6 +3597,7 @@ class ArabicLearnApp {
         });
 
         this.dom.feedbackText.textContent = '';
+        this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
         this.dom.autoTimerFill.classList.remove('correct', 'wrong');
@@ -3066,9 +3637,30 @@ class ArabicLearnApp {
 
         if (type === 'en-ar') this.speak(answer);
 
+        // Show the machinery behind the word, so the word is a pattern and not
+        // a one-off thing to memorise.
+        this.showRootNote(this.state.questions[this.state.currentQuestionIndex].word);
+
         // Auto-advance: short pause on a hit, longer on a miss so the
         // correct answer can be read.
-        this.autoAdvance(isCorrect ? 900 : 1800, isCorrect);
+        this.autoAdvance(isCorrect ? ADVANCE_CORRECT_MS : ADVANCE_WRONG_MS, isCorrect);
+    }
+
+    // "ك-ت-ب (writing) + مَفْعَل (the place) = مكتب · desk / office"
+    showRootNote(word) {
+        const note = this.dom.rootNote;
+        if (!note) return;
+        if (!word || !word.root) { this.clearRootNote(); return; }
+        note.hidden = false;
+        note.textContent =
+            `${word.root} (${word.rootMeaning}) + ${word.pattern} (${word.patternRole}) = ${word.ar} · ${word.en}`;
+    }
+
+    clearRootNote() {
+        const note = this.dom.rootNote;
+        if (!note) return;
+        note.hidden = true;
+        note.textContent = '';
     }
 
     autoAdvance(delay, isCorrect) {
@@ -3106,6 +3698,7 @@ class ArabicLearnApp {
         const correct = this.state.correctThisSession;
         const acc = total ? Math.round((correct / total) * 100) : 0;
         const isTest = this.state.mode === 'test';
+        const isRoots = this.state.mode === 'roots';
 
         if (!isTest) {
             const dialectId = this.state.currentDialect.id;
@@ -3122,8 +3715,8 @@ class ArabicLearnApp {
 
         this.dom.lessonProgressFill.style.width = '100%';
 
-        const title = isTest ? 'Test complete' : 'Lesson complete';
-        const emoji = isTest ? '📊' : '🎉';
+        const title = isTest ? 'Test complete' : isRoots ? 'Drill complete' : 'Lesson complete';
+        const emoji = isTest ? '📊' : isRoots ? '🌱' : '🎉';
 
         this.dom.questionArea.innerHTML = `
             <div class="complete-panel">
@@ -3139,11 +3732,12 @@ class ArabicLearnApp {
                         <span class="complete-label">Correct</span>
                     </div>
                 </div>
-                <button class="btn btn-primary complete-btn" id="completeBtn">${isTest ? 'Back to test' : 'Back to lessons'}</button>
+                <button class="btn btn-primary complete-btn" id="completeBtn">${isTest ? 'Back to test' : isRoots ? 'Back to roots' : 'Back to lessons'}</button>
             </div>
         `;
 
         this.dom.feedbackText.textContent = '';
+        this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
         this.dom.skipBtn.hidden = true;
@@ -3158,6 +3752,8 @@ class ArabicLearnApp {
             this.renderTestScreen();
             this.showScreen('testScreen');
             this.setNav('test');
+        } else if (this.state.mode === 'roots') {
+            this.renderRootsScreen();
         } else {
             this.showHome();
         }
@@ -3231,6 +3827,93 @@ class ArabicLearnApp {
             }
         }
         return picked;
+    }
+
+    // ---------- Root & Pattern ----------
+    renderRootsScreen() {
+        if (typeof ROOT_FAMILIES === 'undefined') {
+            this.dom.patternList.innerHTML = '<p class="roots-empty">Root data failed to load.</p>';
+            this.dom.familyList.innerHTML = '';
+            this.dom.rootDrillBtn.disabled = true;
+            this.showScreen('rootsScreen');
+            this.setNav('roots');
+            return;
+        }
+        this.renderPatternGuide();
+        this.renderRootFamilies();
+        this.dom.rootDrillBtn.disabled = this.rootDrillPool().length < 4;
+        this.showScreen('rootsScreen');
+        this.setNav('roots');
+    }
+
+    renderPatternGuide() {
+        const list = this.dom.patternList;
+        list.innerHTML = '';
+        (typeof PATTERN_GUIDE !== 'undefined' ? PATTERN_GUIDE : []).forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'pattern-row';
+            row.innerHTML = `
+                <span class="pattern-mould" dir="rtl">${p.pattern}</span>
+                <span class="pattern-body">
+                    <span class="pattern-role">${p.role}</span>
+                    <span class="pattern-example">${p.example} · ${p.exampleEn}</span>
+                </span>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    renderRootFamilies() {
+        const list = this.dom.familyList;
+        list.innerHTML = '';
+        ROOT_FAMILIES.forEach(family => {
+            const card = document.createElement('div');
+            card.className = 'family-card';
+            const forms = family.forms.map(f => `
+                <li class="form-row">
+                    <button class="form-word" type="button" data-ar="${f.ar}" aria-label="Hear ${f.ar}">${f.ar}</button>
+                    <span class="form-meta">
+                        <span class="form-en">${f.en}</span>
+                        <span class="form-pattern">${f.pattern}<span class="form-role"> · ${f.role}</span></span>
+                    </span>
+                </li>
+            `).join('');
+            card.innerHTML = `
+                <div class="family-head">
+                    <span class="family-root" dir="rtl">${family.root}</span>
+                    <span class="family-meaning">${family.meaning}</span>
+                </div>
+                <ul class="form-list">${forms}</ul>
+            `;
+            card.querySelectorAll('.form-word').forEach(btn => {
+                btn.addEventListener('click', () => this.speak(btn.dataset.ar));
+            });
+            list.appendChild(card);
+        });
+    }
+
+    // Forms the learner has never met in this dialect make the best inference
+    // questions: they have to use the root and pattern, not recall.
+    rootDrillPool() {
+        if (typeof ROOT_FORM_LIST === 'undefined') return [];
+        const dialectId = this.state.currentDialect ? this.state.currentDialect.id : null;
+        const known = new Set();
+        (lessonData[dialectId] || []).forEach(unit => {
+            unit.words.forEach(w => known.add(normArabic(w.ar)));
+        });
+        const unseen = ROOT_FORM_LIST.filter(w => !known.has(normArabic(w.ar)));
+        return unseen.length >= 6 ? unseen : ROOT_FORM_LIST;
+    }
+
+    startRootDrill() {
+        const pool = this.rootDrillPool();
+        if (pool.length < 4) return;
+        const words = this.shuffle(pool).slice(0, Math.min(ROOT_DRILL_LENGTH, pool.length));
+        this.beginSession('roots', 'Root & Pattern', words, null, {
+            showRoot: true,
+            dirs: ['ar-en'],
+            pool
+        });
     }
 
     // ---------- Test screen ----------
@@ -3326,6 +4009,7 @@ class ArabicLearnApp {
         this.dom.skipBtn.addEventListener('click', () => this.nextQuestion());
         this.dom.closeLesson.addEventListener('click', () => this.closeLesson());
         this.dom.testStartBtn.addEventListener('click', () => this.startTest());
+        this.dom.rootDrillBtn.addEventListener('click', () => this.startRootDrill());
 
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -3338,6 +4022,8 @@ class ArabicLearnApp {
                     this.renderTestScreen();
                     this.showScreen('testScreen');
                     this.setNav('test');
+                } else if (btn.dataset.tab === 'roots') {
+                    this.renderRootsScreen();
                 } else {
                     this.showHome();
                 }
@@ -3382,6 +4068,7 @@ if (document.readyState === 'loading') {
 }
 
 </script>
+    
     
     
     <script>

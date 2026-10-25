@@ -1338,12 +1338,14 @@ Object.keys(dialectBasics).forEach(dialectId => {
     const units = [];
     units.push({
         id: 1,
+        key: 'basics',
         title: 'Basics',
         desc: 'Greetings and everyday talk',
         words: dialectBasics[dialectId].map(toWord)
     });
     units.push({
         id: 2,
+        key: 'local',
         title: 'Local Words',
         desc: 'What people actually say here',
         words: (dialectWords[dialectId] || []).map(toWord)
@@ -1351,6 +1353,7 @@ Object.keys(dialectBasics).forEach(dialectId => {
     coreUnits.forEach((unit, i) => {
         units.push({
             id: i + 3,
+            key: unit.key,
             title: unit.title,
             desc: unit.desc,
             words: unit.words.map(toWord)

@@ -3,7 +3,7 @@
 // Bump the cache name whenever the app shell changes so installed clients
 // drop their old copy on the next visit. Changing this file at all also
 // triggers a service-worker update, which is what re-runs `install`.
-const CACHE = 'arabic-dialects-v3';
+const CACHE = 'arabic-dialects-v4';
 
 const APP_SHELL = [
     './',

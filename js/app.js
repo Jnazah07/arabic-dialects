@@ -41,6 +41,97 @@ const REPS_PER_WORD = 2;
 const TEST_LENGTH = 20;
 const ROOT_DRILL_LENGTH = 10;
 
+// A sentence stage belongs to a bank, not a dialect. Two dialects reading the
+// same bank share the stages they have finished; a dialect on another bank has
+// its own list.
+function sentenceBankFor(dialectId) {
+    if (typeof resolveBank === 'function' && typeof DIALECT_BANK !== 'undefined') {
+        return resolveBank(dialectId, DIALECT_BANK);
+    }
+    return 'general';
+}
+
+// How long a sentence stage's sentences are. A stage is described by its
+// longest sentence so the hint cannot drift from the data it is drawn from.
+const SENTENCE_LENGTH_BANDS = [
+    { max: 2, label: '2 words' },
+    { max: 3, label: '3 words' },
+    { max: 5, label: '4–5 words' },
+    { max: 8, label: '6–8 words' },
+    { max: 12, label: '9–12 words' },
+    { max: Infinity, label: '13+ words' }
+];
+
+const SENTENCE_BANK_LABELS = {
+    gulf: 'Gulf Arabic',
+    levantine: 'Levantine Arabic',
+    egyptian: 'Egyptian Arabic',
+    maghrebi: 'Maghrebi Arabic',
+    general: 'Standard Arabic'
+};
+
+function stageSentences(bank, stage) {
+    if (typeof SENTENCE_BANKS === 'undefined') return [];
+    return (SENTENCE_BANKS[bank] || []).filter(s => s && s.stage === stage);
+}
+
+function stageLengthHint(bank, stage) {
+    const sentences = stageSentences(bank, stage);
+    if (!sentences.length) return '';
+    const longest = Math.max(...sentences.map(s => (Array.isArray(s.tiles) ? s.tiles.length : 0)));
+    const band = SENTENCE_LENGTH_BANDS.find(b => longest <= b.max);
+    return band ? band.label : '';
+}
+
+function bankLabel(bank) {
+    return SENTENCE_BANK_LABELS[bank] || SENTENCE_BANK_LABELS.general;
+}
+
+// Stages a bank has actually written. buildPath() only emits a node for these,
+// so an authoring pass adds a card without touching the renderer.
+function authoredStages(bank) {
+    if (typeof SENTENCE_BANKS === 'undefined') return [];
+    const stages = [];
+    (SENTENCE_BANKS[bank] || []).forEach(s => {
+        if (s && typeof s.stage === 'number' && !stages.includes(s.stage)) stages.push(s.stage);
+    });
+    return stages.sort((a, b) => a - b);
+}
+
+function hasNumericUnitId(completedLessons) {
+    return Object.keys(completedLessons).some(dialectId => {
+        const entries = completedLessons[dialectId];
+        if (!Array.isArray(entries)) return false;
+        return entries.some(id => typeof id === 'number' ||
+            (typeof id === 'string' && /^\d+$/.test(id)));
+    });
+}
+
+// Saved unit progress used to hold numeric ids. Convert it to the stable
+// `unit:<key>` ids the path uses and write the result back once.
+function loadCompletedLessons() {
+    const raw = store.json('arabicLearn_completed', {}) || {};
+    if (!hasNumericUnitId(raw)) return raw;
+    if (typeof SentenceEngine === 'undefined' || !SentenceEngine.migrateCompleted) return raw;
+
+    const migrated = SentenceEngine.migrateCompleted(raw, lessonData);
+    store.set('arabicLearn_completed', JSON.stringify(migrated));
+    return migrated;
+}
+
+function loadSentenceProgress() {
+    const raw = store.json('arabicLearn_sentenceProgress', {});
+    return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+}
+
+// Progress may predate the migration, so both the stable id and the legacy
+// numeric id count as done.
+function isUnitDone(completed, unit) {
+    if (!unit) return false;
+    if (completed.includes(unit.id)) return true;
+    return typeof unit.key === 'string' && completed.includes('unit:' + unit.key);
+}
+
 // Pause after an answer before the next question appears. Testers found the
 // old 900ms too tight to read the word, so both pauses gained 300ms.
 const ADVANCE_CORRECT_MS = 1200;
@@ -53,7 +144,8 @@ class ArabicLearnApp {
             xp: parseInt(store.get('arabicLearn_xp', '0')) || 0,
             streak: parseInt(store.get('arabicLearn_streak', '0')) || 0,
             lastActiveDate: store.get('arabicLearn_lastActive', null),
-            completedLessons: store.json('arabicLearn_completed', {}),
+            completedLessons: loadCompletedLessons(),
+            sentenceProgress: loadSentenceProgress(),
             wordStats: store.json('arabicLearn_wordStats', {}),
             mode: 'lesson',
             currentLesson: null,
@@ -61,6 +153,8 @@ class ArabicLearnApp {
             currentQuestionIndex: 0,
             correctThisSession: 0,
             exercise: null,
+            assembled: [],
+            tray: [],
             showRoot: false,
             pool: null,
             dirs: null,
@@ -144,7 +238,7 @@ class ArabicLearnApp {
     showHome() {
         this.dom.headerDialectName.textContent =
             `${this.state.currentDialect.flag} ${this.state.currentDialect.nameEn}`;
-        this.renderUnits();
+        this.renderPath();
         this.updateStats();
         this.showScreen('homeScreen');
         this.setNav('home');
@@ -195,53 +289,123 @@ class ArabicLearnApp {
         this.showHome();
     }
 
-    // ---------- Units ----------
-    renderUnits() {
+    // ---------- Path ----------
+    // The home list is a mixed path: word units plus the sentence stages that
+    // sit after their anchor units. buildPath() owns the order and isUnlocked()
+    // owns the lock rules, so this method only describes what it is handed.
+    renderPath() {
         const list = this.dom.unitsList;
         list.innerHTML = '';
         const dialectId = this.state.currentDialect.id;
         const lessons = lessonData[dialectId] || [];
         const completed = this.state.completedLessons[dialectId] || [];
+        const bank = sentenceBankFor(dialectId);
+        const sentenceProgress = this.state.sentenceProgress || {};
+        const path = this.buildSentencePath(lessons, bank);
 
-        lessons.forEach((unit, index) => {
-            const isCompleted = completed.includes(unit.id);
-            const prevCompleted = index === 0 || completed.includes(lessons[index - 1].id);
-            const isLocked = !isCompleted && !prevCompleted;
-
-            const card = document.createElement('div');
-            card.className = `unit-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
-            card.setAttribute('role', 'button');
-            card.setAttribute('tabindex', isLocked ? '-1' : '0');
-            card.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
-
-            const status = isCompleted ? '✓ Done'
-                : isLocked ? '🔒 Locked'
-                : 'Start';
-
-            card.innerHTML = `
-                <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '▶'}</div>
-                <div class="unit-body">
-                    <div class="unit-header">
-                        <span class="unit-title">${unit.title}</span>
-                        <span class="unit-status">${status}</span>
-                    </div>
-                    <div class="unit-desc">${unit.desc} · ${unit.words.length} words · ${unit.words.length * REPS_PER_WORD} questions</div>
-                </div>
-            `;
-
-            if (!isLocked) {
-                const activate = () => this.startLesson(unit);
-                card.addEventListener('click', activate);
-                card.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        activate();
-                    }
-                });
-            }
-
+        path.forEach((node, index) => {
+            const isCompleted = this.isPathNodeDone(node, completed, sentenceProgress, bank);
+            const isLocked = this.isPathNodeLocked(path, index, completed, bank, sentenceProgress);
+            const card = node.kind === 'sentence'
+                ? this.renderSentenceCard(node, isLocked, isCompleted)
+                : this.renderUnitCard(node.unit, isLocked, isCompleted);
             list.appendChild(card);
         });
+    }
+
+    buildSentencePath(lessons, bank) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildPath) {
+            // Without the engine the path still renders, just without sentences.
+            return lessons.map(unit => ({ kind: 'unit', id: 'unit:' + unit.key, unit: unit }));
+        }
+        return SentenceEngine.buildPath({
+            units: lessons,
+            bank: bank,
+            anchors: typeof STAGE_ANCHORS !== 'undefined' ? STAGE_ANCHORS : [],
+            sentenceStages: authoredStages(bank)
+        });
+    }
+
+    isPathNodeDone(node, completed, sentenceProgress, bank) {
+        if (!node) return false;
+        if (node.kind === 'sentence') {
+            const done = sentenceProgress[node.bank || bank];
+            return Array.isArray(done) && done.includes(node.stage);
+        }
+        return isUnitDone(completed, node.unit);
+    }
+
+    isPathNodeLocked(path, index, completed, bank, sentenceProgress) {
+        if (typeof SentenceEngine !== 'undefined' && SentenceEngine.isUnlocked) {
+            return !SentenceEngine.isUnlocked(path, index, completed, bank, sentenceProgress);
+        }
+        if (index === 0) return false;
+        return !this.isPathNodeDone(path[index - 1], completed, sentenceProgress, bank);
+    }
+
+    // Both card kinds share the same shell: badge, title, status and one line
+    // of detail. Only what fills that shell differs.
+    bindCardActivation(card, isLocked, activate) {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', isLocked ? '-1' : '0');
+        card.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
+        if (isLocked) return;
+        card.addEventListener('click', activate);
+        card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activate();
+            }
+        });
+    }
+
+    renderUnitCard(unit, isLocked, isCompleted) {
+        const card = document.createElement('div');
+        card.className = `unit-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+
+        const status = isCompleted ? '✓ Done'
+            : isLocked ? '🔒 Locked'
+            : 'Start';
+
+        card.innerHTML = `
+            <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '▶'}</div>
+            <div class="unit-body">
+                <div class="unit-header">
+                    <span class="unit-title">${unit.title}</span>
+                    <span class="unit-status">${status}</span>
+                </div>
+                <div class="unit-desc">${unit.desc} · ${unit.words.length} words · ${unit.words.length * REPS_PER_WORD} questions</div>
+            </div>
+        `;
+
+        this.bindCardActivation(card, isLocked, () => this.startLesson(unit));
+        return card;
+    }
+
+    renderSentenceCard(node, isLocked, isCompleted) {
+        const card = document.createElement('div');
+        card.className = `unit-card sentence-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+
+        const status = isCompleted ? '✓ Done'
+            : isLocked ? '🔒 Locked'
+            : 'Start';
+        const meta = [stageLengthHint(node.bank, node.stage), bankLabel(node.bank)]
+            .filter(Boolean)
+            .join(' · ');
+
+        card.innerHTML = `
+            <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '💬'}</div>
+            <div class="unit-body">
+                <div class="unit-header">
+                    <span class="unit-title">Sentences · Stage ${node.stage}</span>
+                    <span class="unit-status">${status}</span>
+                </div>
+                <div class="unit-desc">${meta}</div>
+            </div>
+        `;
+
+        this.bindCardActivation(card, isLocked, () => this.startSentenceStage(node.stage, node.bank));
+        return card;
     }
 
     // ---------- Lesson engine ----------
@@ -249,16 +413,26 @@ class ArabicLearnApp {
         this.beginSession('lesson', unit.title, unit.words, unit.id);
     }
 
+    startSentenceStage(stage, bank) {
+        const resolved = bank || sentenceBankFor(this.state.currentDialect.id);
+        this.beginSession('sentence', `Sentence · Stage ${stage}`, [], null, {
+            stage: stage,
+            bank: resolved
+        });
+    }
+
     // unitId must survive into currentLesson: completeSession() reads it to mark
     // the unit done, which is what unlocks the next one. Tests pass no id.
     // options: { showRoot, dirs, pool } — used by the root-inference drill.
     beginSession(mode, title, words, unitId = null, options = {}) {
         this.state.mode = mode;
-        this.state.currentLesson = { id: unitId, title, words };
+        this.state.currentLesson = { id: unitId, title, words, stage: options.stage, bank: options.bank };
         this.state.showRoot = !!options.showRoot;
         this.state.dirs = options.dirs || null;
         this.state.pool = options.pool || null;
-        this.state.questions = this.buildQuestions(words, this.state.dirs);
+        this.state.questions = mode === 'sentence'
+            ? this.buildSentenceQuestionSet(options.bank, options.stage)
+            : this.buildQuestions(words, this.state.dirs);
         this.state.currentQuestionIndex = 0;
         this.state.correctThisSession = 0;
 
@@ -289,6 +463,33 @@ class ArabicLearnApp {
             }
         });
         return this.shuffle(questions);
+    }
+
+    // A sentence stage drills one sentence per question. The stage is resolved
+    // from the bank it was opened on, so a gulf stage is the same drill for
+    // every gulf dialect.
+    buildSentenceQuestionSet(bank, stage) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildSentenceQuestions) return [];
+        const resolvedBank = bank || sentenceBankFor(this.state.currentDialect ? this.state.currentDialect.id : null);
+        const sentences = stageSentences(resolvedBank, stage);
+        const questions = SentenceEngine.buildSentenceQuestions(sentences);
+
+        // A stage ends by asking what one of its words is made of. The moment is
+        // only added when a sentence actually carries a root-and-pattern word.
+        const moment = this.buildStageRootMoment(sentences);
+        if (moment) questions.push({ kind: 'root', moment: moment });
+
+        return questions;
+    }
+
+    buildStageRootMoment(sentences) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildRootMoment) return null;
+        const pool = typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : [];
+        for (let i = 0; i < (sentences || []).length; i += 1) {
+            const moment = SentenceEngine.buildRootMoment(sentences[i], pool);
+            if (moment) return moment;
+        }
+        return null;
     }
 
     buildExercise(word, dir) {
@@ -360,12 +561,19 @@ class ArabicLearnApp {
         this.clearTimers();
         this._locked = false;
 
-        const q = this.state.questions[this.state.currentQuestionIndex];
-        const total = this.state.questions.length;
+        if (this.state.mode === 'sentence') {
+            this.renderSentenceQuestion();
+            return;
+        }
 
-        this.dom.currentQ.textContent = this.state.currentQuestionIndex + 1;
-        this.dom.lessonProgressFill.style.width =
-            (this.state.currentQuestionIndex / total) * 100 + '%';
+        const q = this.state.questions[this.state.currentQuestionIndex];
+        if (!q) {
+            this.dom.questionArea.innerHTML =
+                '<p class="question-instruction">No sentences in this stage yet.</p>';
+            return;
+        }
+
+        this.updateQuestionProgress();
 
         const exercise = this.buildExercise(q.word, q.dir);
         this.state.exercise = exercise;
@@ -407,7 +615,264 @@ class ArabicLearnApp {
             choicesDiv.appendChild(btn);
         });
 
+        this.resetFeedback();
+    }
+
+    // ---------- Sentence tile builder ----------
+    // One tap places a tile; the strip is RTL, so the first word lands at the
+    // right edge and the sentence builds the way it is read. There is no submit
+    // button: filling the last slot is the submission.
+    renderSentenceQuestion() {
+        const q = this.state.questions[this.state.currentQuestionIndex];
+        if (!q) {
+            this.dom.questionArea.innerHTML =
+                '<p class="question-instruction">No sentences in this stage yet.</p>';
+            return;
+        }
+
+        this.updateQuestionProgress();
+
+        if (q.kind === 'root') {
+            this.renderRootQuestion(q);
+            return;
+        }
+
+        this.state.exercise = q;
+        this.state.assembled = [];
+        this.state.tray = [...q.tiles];
+
+        this.dom.questionArea.innerHTML = `
+            <p class="question-instruction">Build the sentence</p>
+            <div class="build-strip" id="buildStrip" dir="rtl" role="group" aria-label="Your sentence"></div>
+            <div class="build-tray" id="buildTray" dir="rtl" role="group" aria-label="Word tiles"></div>
+            <p class="build-hint">Tap a word to place it, tap a placed word to send it back.</p>
+        `;
+
+        this.renderBuildTiles();
+        this.resetFeedback();
+    }
+
+    // The close of a stage: one word, four pattern moulds. The word's own
+    // pattern is always among them, and a miss is marked like any other miss.
+    renderRootQuestion(q) {
+        const moment = q.moment;
+        this.state.exercise = moment;
+        this.state.assembled = [];
+        this.state.tray = [];
+
+        const area = this.dom.questionArea;
+        area.innerHTML = `
+            <p class="question-instruction" dir="ltr">Which pattern is this word built on?</p>
+            <div class="root-moment-prompt">
+                <div class="root-moment-word" dir="rtl">${moment.word.ar}</div>
+                <div class="root-moment-gloss">${moment.word.en || moment.word.rootMeaning || ''}</div>
+            </div>
+            <div class="choices" id="choices" role="group" aria-label="Pattern choices"></div>
+        `;
+
+        const choicesDiv = document.getElementById('choices');
+        moment.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'choice-btn pattern-choice';
+            btn.dir = 'rtl';
+            btn.textContent = option;
+            btn.addEventListener('click', () => this.selectRootChoice(option, btn));
+            choicesDiv.appendChild(btn);
+        });
+
+        this.resetFeedback();
+    }
+
+    selectRootChoice(option, btn) {
+        if (this._locked) return;
+        this._locked = true;
+
+        const moment = this.state.exercise;
+        const isCorrect = option === moment.answer;
+
+        document.querySelectorAll('.choice-btn').forEach(c => {
+            c.disabled = true;
+            if (c.textContent === moment.answer) {
+                c.classList.add('correct');
+            } else if (c === btn) {
+                c.classList.add('wrong');
+            }
+        });
+
+        if (isCorrect) {
+            this.state.correctThisSession++;
+            this.addXp(10);
+            this.dom.feedbackText.textContent = 'Correct';
+            this.dom.feedbackArea.className = 'feedback-area feedback-correct';
+        } else {
+            this.dom.feedbackText.textContent = `Correct answer: ${moment.answer}`;
+            this.dom.feedbackText.setAttribute('dir', 'rtl');
+            this.dom.feedbackArea.className = 'feedback-area feedback-wrong';
+        }
+
+        // The same equation the word drill uses, so the pattern is tied back to
+        // the sentence the learner just built.
+        this.showRootNote(moment.word);
+
+        this.autoAdvance(isCorrect ? ADVANCE_CORRECT_MS : ADVANCE_WRONG_MS, isCorrect);
+    }
+
+    // The tray and the strip are both redrawn from state, which keeps duplicate
+    // words honest: a tile is picked by position, never by text.
+    renderBuildTiles() {
+        const strip = document.getElementById('buildStrip');
+        const tray = document.getElementById('buildTray');
+        if (!strip || !tray) return;
+
+        strip.innerHTML = '';
+        tray.innerHTML = '';
+
+        this.state.assembled.forEach((word, i) => {
+            strip.appendChild(this.buildTile(word, 'answer', i));
+        });
+        this.state.tray.forEach((word, i) => {
+            tray.appendChild(this.buildTile(word, 'tray', i));
+        });
+
+        strip.classList.toggle('is-empty', this.state.assembled.length === 0);
+    }
+
+    // The word on top, its gloss underneath. The gloss is only drawn for a
+    // placed tile whose word the sentence itself teaches (a glue word or a new
+    // one), so the strip never invents a meaning the stage did not give.
+    teachGloss(word) {
+        const sentence = this.state.exercise && this.state.exercise.sentence;
+        const teach = sentence && Array.isArray(sentence.teach) ? sentence.teach : [];
+        for (let i = 0; i < teach.length; i += 1) {
+            const entry = teach[i];
+            if (!entry || entry.ar !== word) continue;
+            if (entry.kind !== 'glue' && entry.kind !== 'new') continue;
+            return entry.en || '';
+        }
+        return '';
+    }
+
+    morphWordFor(word) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.findMorphForm) return null;
+        const pool = typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : [];
+        return SentenceEngine.findMorphForm(word, pool);
+    }
+
+    sentenceMorphWord(sentence) {
+        if (!sentence || !Array.isArray(sentence.tiles)) return null;
+        for (let i = 0; i < sentence.tiles.length; i += 1) {
+            const form = this.morphWordFor(sentence.tiles[i]);
+            if (form) return form;
+        }
+        return null;
+    }
+
+    buildTile(word, from, index) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `build-tile build-tile-${from}`;
+        btn.dataset.index = index;
+
+        const label = document.createElement('span');
+        label.className = 'build-tile-word';
+        label.textContent = word;
+        btn.appendChild(label);
+
+        if (from === 'answer') {
+            const chips = document.createElement('span');
+            chips.className = 'build-tile-chips';
+
+            const gloss = this.teachGloss(word);
+            if (gloss) {
+                const glossChip = document.createElement('span');
+                glossChip.className = 'tile-gloss';
+                glossChip.dir = 'ltr';
+                glossChip.textContent = gloss;
+                chips.appendChild(glossChip);
+            }
+
+            const morph = this.morphWordFor(word);
+            if (morph && morph.root) {
+                const rootChip = document.createElement('span');
+                rootChip.className = 'tile-root-chip';
+                rootChip.dir = 'ltr';
+                rootChip.textContent = `Root ${morph.root}`;
+                chips.appendChild(rootChip);
+            }
+
+            if (chips.childNodes.length) btn.appendChild(chips);
+        }
+
+        btn.addEventListener('click', () => this.selectTile(from, index));
+        return btn;
+    }
+
+    // from: 'tray' moves a tile into the sentence, 'answer' sends it back.
+    selectTile(from, index) {
+        if (this._locked) return;
+        const i = Number(index);
+        if (!Number.isInteger(i) || i < 0) return;
+
+        if (from === 'tray') {
+            if (i >= this.state.tray.length) return;
+            this.state.assembled.push(this.state.tray.splice(i, 1)[0]);
+        } else if (from === 'answer') {
+            if (i >= this.state.assembled.length) return;
+            this.state.tray.push(this.state.assembled.splice(i, 1)[0]);
+        } else {
+            return;
+        }
+
+        this.renderBuildTiles();
+
+        const answer = this.state.exercise.sentence.tiles;
+        if (this.state.assembled.length === answer.length) this.gradeBuild();
+    }
+
+    gradeBuild() {
+        if (this._locked) return;
+        this._locked = true;
+
+        const sentence = this.state.exercise.sentence;
+        const answer = sentence.tiles;
+        const result = SentenceEngine.gradeArrangement(this.state.assembled, answer);
+        const strip = document.getElementById('buildStrip');
+
+        document.querySelectorAll('.build-tile').forEach(tile => { tile.disabled = true; });
+
+        // After either outcome, name the machinery behind the hardest word in
+        // the sentence: root + pattern = word.
+        const morph = this.sentenceMorphWord(sentence);
+        if (morph) this.showRootNote(morph);
+
+        if (result.correct) {
+            this.state.correctThisSession++;
+            this.addXp(10);
+            if (strip) strip.classList.add('correct');
+            this.dom.feedbackText.textContent = 'Correct';
+            this.dom.feedbackArea.className = 'feedback-area feedback-correct';
+            this.autoAdvance(ADVANCE_CORRECT_MS, true);
+            return;
+        }
+
+        if (strip) strip.classList.add('wrong');
+        this.dom.feedbackText.textContent = `Correct answer: ${sentence.ar || answer.join(' ')}`;
+        this.dom.feedbackText.setAttribute('dir', 'rtl');
+        this.dom.feedbackArea.className = 'feedback-area feedback-wrong';
+        this.autoAdvance(ADVANCE_WRONG_MS, false);
+    }
+
+    updateQuestionProgress() {
+        const total = this.state.questions.length;
+        this.dom.currentQ.textContent = this.state.currentQuestionIndex + 1;
+        this.dom.lessonProgressFill.style.width =
+            (total ? (this.state.currentQuestionIndex / total) * 100 : 0) + '%';
+    }
+
+    resetFeedback() {
         this.dom.feedbackText.textContent = '';
+        this.dom.feedbackText.removeAttribute('dir');
         this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
@@ -510,14 +975,22 @@ class ArabicLearnApp {
         const acc = total ? Math.round((correct / total) * 100) : 0;
         const isTest = this.state.mode === 'test';
         const isRoots = this.state.mode === 'roots';
+        const isSentence = this.state.mode === 'sentence';
 
-        if (!isTest) {
+        if (isSentence) {
+            this.recordSentenceStage();
+        } else if (!isTest) {
             const dialectId = this.state.currentDialect.id;
             const unitId = this.state.currentLesson.id;
-            if (unitId != null) {
+            const unit = (lessonData[dialectId] || []).find(u => u.id === unitId);
+            const completedId = unit ? 'unit:' + unit.key : unitId;
+
+            if (completedId != null) {
                 if (!this.state.completedLessons[dialectId]) this.state.completedLessons[dialectId] = [];
-                if (!this.state.completedLessons[dialectId].includes(unitId)) {
-                    this.state.completedLessons[dialectId].push(unitId);
+                const done = this.state.completedLessons[dialectId];
+                const alreadyDone = unit ? isUnitDone(done, unit) : done.includes(completedId);
+                if (!alreadyDone) {
+                    done.push(completedId);
                     this.addXp(50);
                 }
                 store.set('arabicLearn_completed', JSON.stringify(this.state.completedLessons));
@@ -556,6 +1029,37 @@ class ArabicLearnApp {
         document.getElementById('completeBtn').addEventListener('click', () => this.closeLesson());
     }
 
+    // A sentence stage belongs to the bank, not the dialect: finishing it once
+    // in any gulf dialect opens the next stage for every gulf dialect. Unit
+    // progress is left alone, so the two ladders never overwrite each other.
+    recordSentenceStage() {
+        const lesson = this.state.currentLesson || {};
+        let bank = lesson.bank;
+        let stage = lesson.stage;
+
+        if (typeof lesson.id === 'string') {
+            const match = /^sentence:([^:]+):(\d+)$/.exec(lesson.id);
+            if (match) {
+                if (!bank) bank = match[1];
+                if (stage === null || stage === undefined) stage = parseInt(match[2], 10);
+            }
+        }
+
+        if (!bank) {
+            const dialectId = this.state.currentDialect ? this.state.currentDialect.id : null;
+            bank = sentenceBankFor(dialectId);
+        }
+
+        const stageNumber = typeof stage === 'number' ? stage : parseInt(stage, 10);
+        if (!Number.isFinite(stageNumber)) return;
+
+        if (!this.state.sentenceProgress) this.state.sentenceProgress = {};
+        const done = this.state.sentenceProgress[bank] || [];
+        if (!done.includes(stageNumber)) done.push(stageNumber);
+        this.state.sentenceProgress[bank] = done;
+        store.set('arabicLearn_sentenceProgress', JSON.stringify(this.state.sentenceProgress));
+    }
+
     closeLesson() {
         this.clearTimers();
         this._locked = false;
@@ -565,6 +1069,8 @@ class ArabicLearnApp {
             this.setNav('test');
         } else if (this.state.mode === 'roots') {
             this.renderRootsScreen();
+        } else if (this.state.mode === 'sentence') {
+            this.showHome();
         } else {
             this.showHome();
         }
@@ -590,7 +1096,7 @@ class ArabicLearnApp {
         const lessons = lessonData[dialectId] || [];
         const completed = this.state.completedLessons[dialectId] || [];
         lessons.forEach(u => {
-            if (completed.includes(u.id)) pool.push(...u.words);
+            if (isUnitDone(completed, u)) pool.push(...u.words);
         });
         // Always include the dialect basics so a test is possible from day one.
         if (lessons[0]) pool.push(...lessons[0].words);

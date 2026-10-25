@@ -13,6 +13,8 @@ $js = @(
     (Read-Text (Join-Path $root 'data/dialects.js')),
     (Read-Text (Join-Path $root 'data/roots.js')),
     (Read-Text (Join-Path $root 'data/lessonData.js')),
+    (Read-Text (Join-Path $root 'data/sentences.js')),
+    (Read-Text (Join-Path $root 'js/sentenceEngine.js')),
     (Read-Text (Join-Path $root 'js/app.js'))
 ) -join "`n"
 
@@ -26,6 +28,8 @@ $scriptTags = @(
     '<script src="data/dialects.js"></script>',
     '<script src="data/roots.js"></script>',
     '<script src="data/lessonData.js"></script>',
+    '<script src="data/sentences.js"></script>',
+    '<script src="js/sentenceEngine.js"></script>',
     '<script src="js/app.js"></script>'
 )
 $html = $html -replace [regex]::Escape($scriptTags[0]), "<script>`n$js`n</script>"

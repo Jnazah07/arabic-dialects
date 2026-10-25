@@ -684,6 +684,196 @@ body.has-nav {
     box-shadow: none;
 }
 
+/* Sentence tile builder. Both rows are RTL: the strip's first word sits at the
+   right edge, and the tray reads right-to-left so tiles are scanned in the same
+   direction. Everything wraps and shrinks, so 386px never scrolls sideways. */
+.build-strip,
+.build-tray {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    direction: rtl;
+}
+
+.build-strip {
+    min-height: 84px;
+    padding: var(--spacing-sm);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    justify-content: flex-start;
+    align-content: flex-start;
+    transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+
+/* An empty strip shows the line it is waiting to be filled on. */
+.build-strip.is-empty::before {
+    content: '';
+    display: block;
+    width: 100%;
+    border-bottom: 2px dashed var(--border);
+    transform: translateY(10px);
+}
+
+.build-strip.correct {
+    border-color: var(--accent);
+    border-style: solid;
+    background: rgba(88, 204, 2, 0.08);
+}
+
+.build-strip.wrong {
+    border-color: var(--red);
+    border-style: solid;
+    background: rgba(255, 75, 75, 0.08);
+}
+
+.build-tray {
+    margin-top: var(--spacing-sm);
+    min-height: 48px;
+}
+
+.build-tile {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: 0.5rem 0.875rem;
+    min-height: 44px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--bg-alt);
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform 120ms ease-out, border-color 120ms ease-out, background 120ms ease-out;
+}
+
+.build-tile-word {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* The support under a placed tile: its taught gloss, and - for a word the
+   root layer knows - the root it was built from. */
+.build-tile-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.tile-gloss {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.tile-root-chip {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--text-secondary);
+    background: rgba(206, 130, 255, 0.12);
+    border: 1px solid rgba(206, 130, 255, 0.35);
+    border-radius: 999px;
+    padding: 0.0625rem 0.375rem;
+}
+
+.build-tile:hover:not(:disabled) {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+}
+
+.build-tile:focus-visible:not(:disabled) {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.build-tile:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+}
+
+.build-tile-answer {
+    border-color: var(--blue);
+    background: rgba(28, 176, 246, 0.08);
+}
+
+.build-tile:disabled {
+    cursor: not-allowed;
+}
+
+.build-strip.correct .build-tile {
+    border-color: var(--accent);
+    background: rgba(88, 204, 2, 0.14);
+    color: var(--accent-hover);
+}
+
+.build-strip.wrong .build-tile {
+    border-color: var(--red);
+    background: rgba(255, 75, 75, 0.14);
+    color: var(--red);
+}
+
+.build-hint {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+/* Closing question of a sentence stage: the word, then four pattern moulds. */
+.root-moment-prompt {
+    text-align: center;
+    margin: var(--spacing-sm) 0;
+}
+
+.root-moment-word {
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-primary);
+}
+
+.root-moment-gloss {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+}
+
+.pattern-choice {
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-size: 1.125rem;
+}
+
+@media (max-width: 420px) {
+    .build-strip {
+        padding: var(--spacing-xs);
+        min-height: 72px;
+        gap: 6px;
+    }
+
+    .build-tray {
+        gap: 6px;
+    }
+
+    .build-tile {
+        font-size: 1rem;
+        padding: 0.4375rem 0.6875rem;
+    }
+}
+
 /* Lesson complete panel */
 .complete-panel {
     display: flex;
@@ -3166,12 +3356,14 @@ Object.keys(dialectBasics).forEach(dialectId => {
     const units = [];
     units.push({
         id: 1,
+        key: 'basics',
         title: 'Basics',
         desc: 'Greetings and everyday talk',
         words: dialectBasics[dialectId].map(toWord)
     });
     units.push({
         id: 2,
+        key: 'local',
         title: 'Local Words',
         desc: 'What people actually say here',
         words: (dialectWords[dialectId] || []).map(toWord)
@@ -3179,6 +3371,7 @@ Object.keys(dialectBasics).forEach(dialectId => {
     coreUnits.forEach((unit, i) => {
         units.push({
             id: i + 3,
+            key: unit.key,
             title: unit.title,
             desc: unit.desc,
             words: unit.words.map(toWord)
@@ -3186,6 +3379,2633 @@ Object.keys(dialectBasics).forEach(dialectId => {
     });
     lessonData[dialectId] = units;
 });
+
+// Sentence data schema, Gulf stage 1, and coverage validator.
+// Loaded as a plain <script> in the browser and via require() in Node tests.
+
+const STAGE_ANCHORS = ['family', 'numbers2', 'clothes', 'work', 'adjectives2', 'hobbies'];
+
+const DIALECT_BANK = {
+    emirati: 'gulf',
+    saudi: 'gulf',
+    omani: 'gulf',
+    yemeni: 'gulf',
+    kuwaiti: 'gulf',
+    qatari: 'gulf',
+    bahraini: 'gulf',
+    mali: 'general',
+    niger: 'general',
+    senegal: 'general',
+    iraqi: 'general',
+    jordanian: 'levantine',
+    lebanese: 'levantine',
+    palestinian: 'levantine',
+    syrian: 'levantine',
+    algerian: 'maghrebi',
+    egyptian: 'egyptian',
+    libyan: 'maghrebi',
+    mauritanian: 'maghrebi',
+    moroccan: 'maghrebi',
+    sudanese: 'general',
+    tunisian: 'maghrebi',
+    comorian: 'general',
+    djiboutian: 'general',
+    somalian: 'general'
+};
+
+const DIALECT_SWAPS = {};
+
+const SENTENCE_BANKS = {
+    gulf: [
+        {
+            id: 'gulf-s1-01',
+            stage: 1,
+            ar: 'أنا زين',
+            en: 'I am fine',
+            tr: 'ana zayn',
+            tiles: ['أنا', 'زين'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s1-02',
+            stage: 1,
+            ar: 'أنا تعب',
+            en: 'I am tired',
+            tr: 'ana ta3ab',
+            tiles: ['أنا', 'تعب'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s1-03',
+            stage: 1,
+            ar: 'أنت زين',
+            en: 'You are fine',
+            tr: 'anta zayn',
+            tiles: ['أنت', 'زين'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s1-04',
+            stage: 1,
+            ar: 'أنت تعب',
+            en: 'You are tired',
+            tr: 'anta ta3ab',
+            tiles: ['أنت', 'تعب'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s1-05',
+            stage: 1,
+            ar: 'هو زين',
+            en: 'He is fine',
+            tr: 'huwa zayn',
+            tiles: ['هو', 'زين'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s1-06',
+            stage: 1,
+            ar: 'هي زين',
+            en: 'She is fine',
+            tr: 'hiya zayn',
+            tiles: ['هي', 'زين'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s1-07',
+            stage: 1,
+            ar: 'أنا جوعان',
+            en: 'I am hungry',
+            tr: 'ana jo3an',
+            tiles: ['أنا', 'جوعان'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s1-08',
+            stage: 1,
+            ar: 'هو جوعان',
+            en: 'He is hungry',
+            tr: 'huwa jo3an',
+            tiles: ['هو', 'جوعان'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s1-09',
+            stage: 1,
+            ar: 'هو كاتب',
+            en: 'He is a writer',
+            tr: 'huwa kaatib',
+            tiles: ['هو', 'كاتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s2-01',
+            stage: 2,
+            ar: 'أنا درس',
+            en: 'I study',
+            tr: 'ana dars',
+            tiles: ['أنا', 'درس'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'درس', en: 'lesson/study', kind: 'new' }
+            ],
+            roots: [{ ar: 'درس' }]
+        },
+        {
+            id: 'gulf-s3-01',
+            stage: 3,
+            ar: 'هو كتاب',
+            en: 'He has a book',
+            tr: 'huwa kitab',
+            tiles: ['هو', 'كتاب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كتاب', en: 'book', kind: 'new' }
+            ],
+            roots: [{ ar: 'كتاب' }]
+        },
+        {
+            id: 'gulf-s4-01',
+            stage: 4,
+            ar: 'أنت مدرس',
+            en: 'You are a teacher',
+            tr: 'anta mudarris',
+            tiles: ['أنت', 'مدرس'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s5-01',
+            stage: 5,
+            ar: 'هو كبير',
+            en: 'He is big',
+            tr: 'huwa kabir',
+            tiles: ['هو', 'كبير'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'gulf-s6-01',
+            stage: 6,
+            ar: 'أنا عالم',
+            en: 'I am a scholar',
+            tr: 'ana alim',
+            tiles: ['أنا', 'عالم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'عالم', en: 'scholar', kind: 'new' }
+            ],
+            roots: [{ ar: 'عالم' }]
+        }
+,
+        {
+            id: 'gulf-s2-02',
+            stage: 2,
+            ar: 'أنا زين اليوم',
+            en: 'I am fine today',
+            tr: 'ana zayn al-yawm',
+            tiles: ['أنا', 'زين', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s2-03',
+            stage: 2,
+            ar: 'أنت تعب اليوم',
+            en: 'You are tired today',
+            tr: 'anta ta3ab al-yawm',
+            tiles: ['أنت', 'تعب', 'اليوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s2-04',
+            stage: 2,
+            ar: 'هو زين دوم',
+            en: 'He is always fine',
+            tr: 'huwa zayn dawm',
+            tiles: ['هو', 'زين', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s2-05',
+            stage: 2,
+            ar: 'هي جوعان اليوم',
+            en: 'She is hungry today',
+            tr: 'hiya jo3an al-yawm',
+            tiles: ['هي', 'جوعان', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s2-06',
+            stage: 2,
+            ar: 'أنا مدرس اليوم',
+            en: 'I am a teacher today',
+            tr: 'ana mudarris al-yawm',
+            tiles: ['أنا', 'مدرس', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s2-07',
+            stage: 2,
+            ar: 'هو كاتب دوم',
+            en: 'He is always a writer',
+            tr: 'huwa kaatib dawm',
+            tiles: ['هو', 'كاتب', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s2-08',
+            stage: 2,
+            ar: 'أنت زين دوم',
+            en: 'You are always fine',
+            tr: 'anta zayn dawm',
+            tiles: ['أنت', 'زين', 'دوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s3-02',
+            stage: 3,
+            ar: 'هو كتاب كبير',
+            en: 'He has a big book',
+            tr: 'huwa kitab kabir',
+            tiles: ['هو', 'كتاب', 'كبير'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كتاب', en: 'book', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كتاب' }, { ar: 'كبير' }]
+        },
+        {
+            id: 'gulf-s3-03',
+            stage: 3,
+            ar: 'أنا مدرس جيد',
+            en: 'I am a good teacher',
+            tr: 'ana mudarris jayyid',
+            tiles: ['أنا', 'مدرس', 'جيد'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s3-04',
+            stage: 3,
+            ar: 'أنت كاتب مشهور',
+            en: 'You are a famous writer',
+            tr: 'anta kaatib mashhoor',
+            tiles: ['أنت', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s3-05',
+            stage: 3,
+            ar: 'هي جوعان اليوم',
+            en: 'She is hungry today',
+            tr: 'hiya jo3an al-yawm',
+            tiles: ['هي', 'جوعان', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s3-06',
+            stage: 3,
+            ar: 'هو تعب اليوم',
+            en: 'He is tired today',
+            tr: 'huwa ta3ab al-yawm',
+            tiles: ['هو', 'تعب', 'اليوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s3-07',
+            stage: 3,
+            ar: 'أنا زين دوم',
+            en: 'I am always fine',
+            tr: 'ana zayn dawm',
+            tiles: ['أنا', 'زين', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s3-08',
+            stage: 3,
+            ar: 'أنت زين دوم',
+            en: 'You are always fine',
+            tr: 'anta zayn dawm',
+            tiles: ['أنت', 'زين', 'دوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s4-02',
+            stage: 4,
+            ar: 'أنا مدرس في المدرسة',
+            en: 'I teach at the school',
+            tr: 'ana mudarris fi al-madrasa',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s4-03',
+            stage: 4,
+            ar: 'هو كاتب في المكتب',
+            en: 'He writes at the office',
+            tr: 'huwa kaatib fi al-maktab',
+            tiles: ['هو', 'كاتب', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s4-04',
+            stage: 4,
+            ar: 'أنت مدرس جيد اليوم',
+            en: 'You are a good teacher today',
+            tr: 'anta mudarris jayyid al-yawm',
+            tiles: ['أنت', 'مدرس', 'جيد', 'اليوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s4-05',
+            stage: 4,
+            ar: 'هي كاتب مشهور',
+            en: 'She is a famous writer',
+            tr: 'hiya kaatiba mashhoora',
+            tiles: ['هي', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s4-06',
+            stage: 4,
+            ar: 'هو كبير وذكي',
+            en: 'He is big and smart',
+            tr: 'huwa kabir wa dhaki',
+            tiles: ['هو', 'كبير', 'وذكي'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كبير', en: 'big', kind: 'new' },
+                { ar: 'وذكي', en: 'and smart', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'gulf-s4-07',
+            stage: 4,
+            ar: 'أنا زين دوم',
+            en: 'I am always fine',
+            tr: 'ana zayn dawm',
+            tiles: ['أنا', 'زين', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s4-08',
+            stage: 4,
+            ar: 'أنت تعب اليوم',
+            en: 'You are tired today',
+            tr: 'anta ta3ab al-yawm',
+            tiles: ['أنت', 'تعب', 'اليوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s5-02',
+            stage: 5,
+            ar: 'أنا مدرس في المدرسة دوم',
+            en: 'I always teach at the school',
+            tr: 'ana mudarris fi al-madrasa dawm',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s5-03',
+            stage: 5,
+            ar: 'هو كاتب مشهور في المكتب',
+            en: 'He is a famous writer at the office',
+            tr: 'huwa kaatib mashhoor fi al-maktab',
+            tiles: ['هو', 'كاتب', 'مشهور', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s5-04',
+            stage: 5,
+            ar: 'أنا زين دوم في البيت',
+            en: 'I am always fine at home',
+            tr: 'ana zayn dawm fi al-bayt',
+            tiles: ['أنا', 'زين', 'دوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s5-05',
+            stage: 5,
+            ar: 'أنت مدرس جيد دوم',
+            en: 'You are always a good teacher',
+            tr: 'anta mudarris jayyid dawm',
+            tiles: ['أنت', 'مدرس', 'جيد', 'دوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s5-06',
+            stage: 5,
+            ar: 'هي جوعان اليوم في البيت',
+            en: 'She is hungry today at home',
+            tr: 'hiya jo3an al-yawm fi al-bayt',
+            tiles: ['هي', 'جوعان', 'اليوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s5-07',
+            stage: 5,
+            ar: 'هو تعب اليوم في المكتب',
+            en: 'He is tired today at the office',
+            tr: 'huwa ta3ab al-yawm fi al-maktab',
+            tiles: ['هو', 'تعب', 'اليوم', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s5-08',
+            stage: 5,
+            ar: 'أنا كبير وذكي',
+            en: 'I am big and smart',
+            tr: 'ana kabir wa dhaki',
+            tiles: ['أنا', 'كبير', 'وذكي'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'كبير', en: 'big', kind: 'new' },
+                { ar: 'وذكي', en: 'and smart', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'gulf-s6-02',
+            stage: 6,
+            ar: 'أنا مدرس جيد في المدرسة دوم',
+            en: 'I am always a good teacher at the school',
+            tr: 'ana mudarris jayyid fi al-madrasa dawm',
+            tiles: ['أنا', 'مدرس', 'جيد', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s6-03',
+            stage: 6,
+            ar: 'هو كاتب مشهور في المكتب دوم',
+            en: 'He is always a famous writer at the office',
+            tr: 'huwa kaatib mashhoor fi al-maktab dawm',
+            tiles: ['هو', 'كاتب', 'مشهور', 'في', 'المكتب', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'gulf-s6-04',
+            stage: 6,
+            ar: 'أنا زين دوم في البيت اليوم',
+            en: 'I am always fine at home today',
+            tr: 'ana zayn dawm fi al-bayt al-yawm',
+            tiles: ['أنا', 'زين', 'دوم', 'في', 'البيت', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'gulf-s6-05',
+            stage: 6,
+            ar: 'أنت مدرس جيد دوم في المدرسة',
+            en: 'You are always a good teacher at the school',
+            tr: 'anta mudarris jayyid dawm fi al-madrasa',
+            tiles: ['أنت', 'مدرس', 'جيد', 'دوم', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'gulf-s6-06',
+            stage: 6,
+            ar: 'هي جوعان اليوم في البيت دوم',
+            en: 'She is always hungry today at home',
+            tr: 'hiya jo3an al-yawm fi al-bayt dawm',
+            tiles: ['هي', 'جوعان', 'اليوم', 'في', 'البيت', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'gulf-s6-07',
+            stage: 6,
+            ar: 'هو تعب اليوم في المكتب دوم',
+            en: 'He is always tired today at the office',
+            tr: 'huwa ta3ab al-yawm fi al-maktab dawm',
+            tiles: ['هو', 'تعب', 'اليوم', 'في', 'المكتب', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعب', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعب' }]
+        },
+        {
+            id: 'gulf-s6-08',
+            stage: 6,
+            ar: 'أنا كبير وذكي دوم',
+            en: 'I am always big and smart',
+            tr: 'ana kabir wa dhaki dawm',
+            tiles: ['أنا', 'كبير', 'وذكي', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'كبير', en: 'big', kind: 'new' },
+                { ar: 'وذكي', en: 'and smart', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        }
+    ],
+    levantine: [
+        {
+            id: 'levantine-s1-01',
+            stage: 1,
+            ar: 'أنا بخير',
+            en: 'I am fine',
+            tr: 'ana bikhayr',
+            tiles: ['أنا', 'بخير'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s1-02',
+            stage: 1,
+            ar: 'أنا تعبان',
+            en: 'I am tired',
+            tr: 'ana ta3ban',
+            tiles: ['أنا', 'تعبان'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'levantine-s1-03',
+            stage: 1,
+            ar: 'أنت منيح',
+            en: 'You are good',
+            tr: 'anta mnih',
+            tiles: ['أنت', 'منيح'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s1-04',
+            stage: 1,
+            ar: 'هو منيح',
+            en: 'He is good',
+            tr: 'huwa mnih',
+            tiles: ['هو', 'منيح'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s1-05',
+            stage: 1,
+            ar: 'هي تعبانة',
+            en: 'She is tired',
+            tr: 'hiya ta3bana',
+            tiles: ['هي', 'تعبانة'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'تعبانة', en: 'tired (f)', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبانة' }]
+        },
+        {
+            id: 'levantine-s1-06',
+            stage: 1,
+            ar: 'أنا جوعان',
+            en: 'I am hungry',
+            tr: 'ana jo3an',
+            tiles: ['أنا', 'جوعان'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'levantine-s1-07',
+            stage: 1,
+            ar: 'هو جوعان',
+            en: 'He is hungry',
+            tr: 'huwa jo3an',
+            tiles: ['هو', 'جوعان'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'levantine-s1-08',
+            stage: 1,
+            ar: 'هو كاتب',
+            en: 'He is a writer',
+            tr: 'huwa kaatib',
+            tiles: ['هو', 'كاتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s2-01',
+            stage: 2,
+            ar: 'أنا بدي ماء',
+            en: 'I want water',
+            tr: 'ana bidi maa',
+            tiles: ['أنا', 'بدي', 'ماء'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'ماء', en: 'water', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s2-02',
+            stage: 2,
+            ar: 'أنت بدي قهوة',
+            en: 'You want coffee',
+            tr: 'anta bidi qahwa',
+            tiles: ['أنت', 'بدي', 'قهوة'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s2-03',
+            stage: 2,
+            ar: 'هو بدي بيت',
+            en: 'He wants a house',
+            tr: 'huwa bidi bayt',
+            tiles: ['هو', 'بدي', 'بيت'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'بيت', en: 'house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s2-04',
+            stage: 2,
+            ar: 'أنا جوعان اليوم',
+            en: 'I am hungry today',
+            tr: 'ana jo3an al-yawm',
+            tiles: ['أنا', 'جوعان', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'levantine-s2-05',
+            stage: 2,
+            ar: 'هي تعبانة اليوم',
+            en: 'She is tired today',
+            tr: 'hiya ta3bana al-yawm',
+            tiles: ['هي', 'تعبانة', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'تعبانة', en: 'tired (f)', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبانة' }]
+        },
+        {
+            id: 'levantine-s2-06',
+            stage: 2,
+            ar: 'هو منيح دوم',
+            en: 'He is always good',
+            tr: 'huwa mnih dawm',
+            tiles: ['هو', 'منيح', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s2-07',
+            stage: 2,
+            ar: 'أنت زين هلق',
+            en: 'You are fine now',
+            tr: 'anta zayn halag',
+            tiles: ['أنت', 'زين', 'هلق'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'زين', en: 'fine/good', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s2-08',
+            stage: 2,
+            ar: 'أنا بخير هلق',
+            en: 'I am fine now',
+            tr: 'ana bikhayr halag',
+            tiles: ['أنا', 'بخير', 'هلق'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s3-01',
+            stage: 3,
+            ar: 'هو كتاب كبير',
+            en: 'He has a big book',
+            tr: 'huwa kitab kabir',
+            tiles: ['هو', 'كتاب', 'كبير'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كتاب', en: 'book', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كتاب' }, { ar: 'كبير' }]
+        },
+        {
+            id: 'levantine-s3-02',
+            stage: 3,
+            ar: 'أنا مدرس في المدرسة',
+            en: 'I teach at the school',
+            tr: 'ana mudarris fi al-madrasa',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'levantine-s3-03',
+            stage: 3,
+            ar: 'أنت كاتب مشهور',
+            en: 'You are a famous writer',
+            tr: 'anta kaatib mashhoor',
+            tiles: ['أنت', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s3-04',
+            stage: 3,
+            ar: 'هي جوعانة اليوم',
+            en: 'She is hungry today',
+            tr: 'hiya jo3ana al-yawm',
+            tiles: ['هي', 'جوعانة', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'levantine-s3-05',
+            stage: 3,
+            ar: 'هو تعبان هلق',
+            en: 'He is tired now',
+            tr: 'huwa ta3ban halag',
+            tiles: ['هو', 'تعبان', 'هلق'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'levantine-s3-06',
+            stage: 3,
+            ar: 'أنا بخير دوم',
+            en: 'I am always fine',
+            tr: 'ana bikhayr dawm',
+            tiles: ['أنا', 'بخير', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s3-07',
+            stage: 3,
+            ar: 'أنت منيح هلق',
+            en: 'You are good now',
+            tr: 'anta mnih halag',
+            tiles: ['أنت', 'منيح', 'هلق'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s3-08',
+            stage: 3,
+            ar: 'هي منيح دوم',
+            en: 'She is always good',
+            tr: 'hiya mnih dawm',
+            tiles: ['هي', 'منيح', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s4-01',
+            stage: 4,
+            ar: 'هو كاتب في المكتب',
+            en: 'He writes at the office',
+            tr: 'huwa kaatib fi al-maktab',
+            tiles: ['هو', 'كاتب', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s4-02',
+            stage: 4,
+            ar: 'أنا مدرس في المدرسة',
+            en: 'I teach at the school',
+            tr: 'ana mudarris fi al-madrasa',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'levantine-s4-03',
+            stage: 4,
+            ar: 'أنت بدي قهوة هلق',
+            en: 'You want coffee now',
+            tr: 'anta bidi qahwa halag',
+            tiles: ['أنت', 'بدي', 'قهوة', 'هلق'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s4-04',
+            stage: 4,
+            ar: 'هي منيح دوم في البيت',
+            en: 'She is always good at home',
+            tr: 'hiya mnih dawm fi al-bayt',
+            tiles: ['هي', 'منيح', 'دوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s4-05',
+            stage: 4,
+            ar: 'هو تعبان اليوم في العمل',
+            en: 'He is tired today at work',
+            tr: 'huwa ta3ban al-yawm fi al-3amal',
+            tiles: ['هو', 'تعبان', 'اليوم', 'في', 'العمل'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'levantine-s4-06',
+            stage: 4,
+            ar: 'أنا جوعان في البيت',
+            en: 'I am hungry at home',
+            tr: 'ana jo3an fi al-bayt',
+            tiles: ['أنا', 'جوعان', 'في', 'البيت'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'levantine-s4-07',
+            stage: 4,
+            ar: 'أنت كاتب مشهور',
+            en: 'You are a famous writer',
+            tr: 'anta kaatib mashhoor',
+            tiles: ['أنت', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s4-08',
+            stage: 4,
+            ar: 'هي منيح دوم',
+            en: 'She is always good',
+            tr: 'hiya mnih dawm',
+            tiles: ['هي', 'منيح', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s5-01',
+            stage: 5,
+            ar: 'أنا بدي بيت كبير',
+            en: 'I want a big house',
+            tr: 'ana bidi bayt kabir',
+            tiles: ['أنا', 'بدي', 'بيت', 'كبير'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'بيت', en: 'house', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'levantine-s5-02',
+            stage: 5,
+            ar: 'هو مدرس في المدرسة دوم',
+            en: 'He always teaches at the school',
+            tr: 'huwa mudarris fi al-madrasa dawm',
+            tiles: ['هو', 'مدرس', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'levantine-s5-03',
+            stage: 5,
+            ar: 'أنت بدي قهوة هلق',
+            en: 'You want coffee now',
+            tr: 'anta bidi qahwa halag',
+            tiles: ['أنت', 'بدي', 'قهوة', 'هلق'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' },
+                { ar: 'هلق', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s5-04',
+            stage: 5,
+            ar: 'هي جوعانة في البيت اليوم',
+            en: 'She is hungry at home today',
+            tr: 'hiya jo3ana fi al-bayt al-yawm',
+            tiles: ['هي', 'جوعانة', 'في', 'البيت', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'levantine-s5-05',
+            stage: 5,
+            ar: 'هو تعبان دوم في العمل',
+            en: 'He is always tired at work',
+            tr: 'huwa ta3ban dawm fi al-3amal',
+            tiles: ['هو', 'تعبان', 'دوم', 'في', 'العمل'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'levantine-s5-06',
+            stage: 5,
+            ar: 'أنا بخير دوم في البيت',
+            en: 'I am always fine at home',
+            tr: 'ana bikhayr dawm fi al-bayt',
+            tiles: ['أنا', 'بخير', 'دوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s5-07',
+            stage: 5,
+            ar: 'أنت منيح دوم في المدرسة',
+            en: 'You are always good at the school',
+            tr: 'anta mnih dawm fi al-madrasa',
+            tiles: ['أنت', 'منيح', 'دوم', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s5-08',
+            stage: 5,
+            ar: 'هو كاتب مشهور في المكتب',
+            en: 'He is a famous writer at the office',
+            tr: 'huwa kaatib mashhoor fi al-maktab',
+            tiles: ['هو', 'كاتب', 'مشهور', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s6-01',
+            stage: 6,
+            ar: 'أنا بدي بيت كبير في المدينة',
+            en: 'I want a big house in the city',
+            tr: 'ana bidi bayt kabir fi al-madina',
+            tiles: ['أنا', 'بدي', 'بيت', 'كبير', 'في', 'المدينة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بدي', en: 'I want', kind: 'new' },
+                { ar: 'بيت', en: 'house', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدينة', en: 'the city', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'levantine-s6-02',
+            stage: 6,
+            ar: 'هو مدرس جيد في المدرسة دوم',
+            en: 'He is always a good teacher at the school',
+            tr: 'huwa mudarris jayyid fi al-madrasa dawm',
+            tiles: ['هو', 'مدرس', 'جيد', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'levantine-s6-03',
+            stage: 6,
+            ar: 'أنت كاتب مشهور في المكتب دوم',
+            en: 'You are always a famous writer at the office',
+            tr: 'anta kaatib mashhoor fi al-maktab dawm',
+            tiles: ['أنت', 'كاتب', 'مشهور', 'في', 'المكتب', 'دوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'levantine-s6-04',
+            stage: 6,
+            ar: 'هي جوعانة في البيت اليوم دوم',
+            en: 'She is always hungry at home today',
+            tr: 'hiya jo3ana fi al-bayt al-yawm dawm',
+            tiles: ['هي', 'جوعانة', 'في', 'البيت', 'اليوم', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'levantine-s6-05',
+            stage: 6,
+            ar: 'هو تعبان دوم في العمل اليوم',
+            en: 'He is always tired at work today',
+            tr: 'huwa ta3ban dawm fi al-3amal al-yawm',
+            tiles: ['هو', 'تعبان', 'دوم', 'في', 'العمل', 'اليوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'levantine-s6-06',
+            stage: 6,
+            ar: 'أنا بخير دوم في البيت اليوم',
+            en: 'I am always fine at home today',
+            tr: 'ana bikhayr dawm fi al-bayt al-yawm',
+            tiles: ['أنا', 'بخير', 'دوم', 'في', 'البيت', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s6-07',
+            stage: 6,
+            ar: 'أنت منيح دوم في المدرسة اليوم',
+            en: 'You are always good at the school today',
+            tr: 'anta mnih dawm fi al-madrasa al-yawm',
+            tiles: ['أنت', 'منيح', 'دوم', 'في', 'المدرسة', 'اليوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'منيح', en: 'good/fine', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'levantine-s6-08',
+            stage: 6,
+            ar: 'هو كاتب مشهور دوم في المكتب',
+            en: 'He is always a famous writer at the office',
+            tr: 'huwa kaatib mashhoor dawm fi al-maktab',
+            tiles: ['هو', 'كاتب', 'مشهور', 'دوم', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        }
+    ],
+    egyptian: [],
+    maghrebi: [],
+    general: [
+        {
+            id: 'general-s1-01',
+            stage: 1,
+            ar: 'أنا بخير',
+            en: 'I am fine',
+            tr: 'ana bikhayr',
+            tiles: ['أنا', 'بخير'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s1-02',
+            stage: 1,
+            ar: 'أنا تعبان',
+            en: 'I am tired',
+            tr: 'ana ta3ban',
+            tiles: ['أنا', 'تعبان'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'general-s1-03',
+            stage: 1,
+            ar: 'أنت بخير',
+            en: 'You are fine',
+            tr: 'anta bikhayr',
+            tiles: ['أنت', 'بخير'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s1-04',
+            stage: 1,
+            ar: 'هو بخير',
+            en: 'He is fine',
+            tr: 'huwa bikhayr',
+            tiles: ['هو', 'بخير'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s1-05',
+            stage: 1,
+            ar: 'هي تعبانة',
+            en: 'She is tired',
+            tr: 'hiya ta3bana',
+            tiles: ['هي', 'تعبانة'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'تعبانة', en: 'tired (f)', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبانة' }]
+        },
+        {
+            id: 'general-s1-06',
+            stage: 1,
+            ar: 'أنا جوعان',
+            en: 'I am hungry',
+            tr: 'ana jo3an',
+            tiles: ['أنا', 'جوعان'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'general-s1-07',
+            stage: 1,
+            ar: 'هو جوعان',
+            en: 'He is hungry',
+            tr: 'huwa jo3an',
+            tiles: ['هو', 'جوعان'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'general-s1-08',
+            stage: 1,
+            ar: 'هو كاتب',
+            en: 'He is a writer',
+            tr: 'huwa kaatib',
+            tiles: ['هو', 'كاتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s2-01',
+            stage: 2,
+            ar: 'أنا أريد ماء',
+            en: 'I want water',
+            tr: 'ana uridu maa',
+            tiles: ['أنا', 'أريد', 'ماء'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'ماء', en: 'water', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s2-02',
+            stage: 2,
+            ar: 'أنا أريد قهوة',
+            en: 'I want coffee',
+            tr: 'ana uridu qahwa',
+            tiles: ['أنا', 'أريد', 'قهوة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s2-03',
+            stage: 2,
+            ar: 'هو جوعان اليوم',
+            en: 'He is hungry today',
+            tr: 'huwa jo3an al-yawm',
+            tiles: ['هو', 'جوعان', 'اليوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'general-s2-04',
+            stage: 2,
+            ar: 'هي تعبانة اليوم',
+            en: 'She is tired today',
+            tr: 'hiya ta3bana al-yawm',
+            tiles: ['هي', 'تعبانة', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'تعبانة', en: 'tired (f)', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبانة' }]
+        },
+        {
+            id: 'general-s2-05',
+            stage: 2,
+            ar: 'أنت بخير الآن',
+            en: 'You are fine now',
+            tr: 'anta bikhayr al-aan',
+            tiles: ['أنت', 'بخير', 'الآن'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'الآن', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s2-06',
+            stage: 2,
+            ar: 'أنا مدرس اليوم',
+            en: 'I am a teacher today',
+            tr: 'ana mudarris al-yawm',
+            tiles: ['أنا', 'مدرس', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'general-s2-07',
+            stage: 2,
+            ar: 'هو كاتب دوم',
+            en: 'He is always a writer',
+            tr: 'huwa kaatib dawm',
+            tiles: ['هو', 'كاتب', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s2-08',
+            stage: 2,
+            ar: 'أنا بخير دوم',
+            en: 'I am always fine',
+            tr: 'ana bikhayr dawm',
+            tiles: ['أنا', 'بخير', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s3-01',
+            stage: 3,
+            ar: 'هو كتاب كبير',
+            en: 'He has a big book',
+            tr: 'huwa kitab kabir',
+            tiles: ['هو', 'كتاب', 'كبير'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كتاب', en: 'book', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كتاب' }, { ar: 'كبير' }]
+        },
+        {
+            id: 'general-s3-02',
+            stage: 3,
+            ar: 'أنا مدرس في المدرسة',
+            en: 'I teach at the school',
+            tr: 'ana mudarris fi al-madrasa',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'general-s3-03',
+            stage: 3,
+            ar: 'أنت كاتب مشهور',
+            en: 'You are a famous writer',
+            tr: 'anta kaatib mashhoor',
+            tiles: ['أنت', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s3-04',
+            stage: 3,
+            ar: 'هي جوعانة اليوم',
+            en: 'She is hungry today',
+            tr: 'hiya jo3ana al-yawm',
+            tiles: ['هي', 'جوعانة', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'general-s3-05',
+            stage: 3,
+            ar: 'هو تعبان الآن',
+            en: 'He is tired now',
+            tr: 'huwa ta3ban al-aan',
+            tiles: ['هو', 'تعبان', 'الآن'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'الآن', en: 'now', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'general-s3-06',
+            stage: 3,
+            ar: 'أنا بخير دوم',
+            en: 'I am always fine',
+            tr: 'ana bikhayr dawm',
+            tiles: ['أنا', 'بخير', 'دوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s3-07',
+            stage: 3,
+            ar: 'أنت بخير الآن',
+            en: 'You are fine now',
+            tr: 'anta bikhayr al-aan',
+            tiles: ['أنت', 'بخير', 'الآن'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'الآن', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s3-08',
+            stage: 3,
+            ar: 'هي بخير دوم',
+            en: 'She is always fine',
+            tr: 'hiya bikhayr dawm',
+            tiles: ['هي', 'بخير', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s4-01',
+            stage: 4,
+            ar: 'هو كاتب في المكتب',
+            en: 'He writes at the office',
+            tr: 'huwa kaatib fi al-maktab',
+            tiles: ['هو', 'كاتب', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s4-02',
+            stage: 4,
+            ar: 'أنا مدرس في المدرسة',
+            en: 'I teach at the school',
+            tr: 'ana mudarris fi al-madrasa',
+            tiles: ['أنا', 'مدرس', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'general-s4-03',
+            stage: 4,
+            ar: 'أنت أريد قهوة الآن',
+            en: 'You want coffee now',
+            tr: 'anta uridu qahwa al-aan',
+            tiles: ['أنت', 'أريد', 'قهوة', 'الآن'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' },
+                { ar: 'الآن', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s4-04',
+            stage: 4,
+            ar: 'هي بخير دوم في البيت',
+            en: 'She is always fine at home',
+            tr: 'hiya bikhayr dawm fi al-bayt',
+            tiles: ['هي', 'بخير', 'دوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s4-05',
+            stage: 4,
+            ar: 'هو تعبان اليوم في العمل',
+            en: 'He is tired today at work',
+            tr: 'huwa ta3ban al-yawm fi al-3amal',
+            tiles: ['هو', 'تعبان', 'اليوم', 'في', 'العمل'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'general-s4-06',
+            stage: 4,
+            ar: 'أنا جوعان في البيت',
+            en: 'I am hungry at home',
+            tr: 'ana jo3an fi al-bayt',
+            tiles: ['أنا', 'جوعان', 'في', 'البيت'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'جوعان', en: 'hungry', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعان' }]
+        },
+        {
+            id: 'general-s4-07',
+            stage: 4,
+            ar: 'أنت كاتب مشهور',
+            en: 'You are a famous writer',
+            tr: 'anta kaatib mashhoor',
+            tiles: ['أنت', 'كاتب', 'مشهور'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s4-08',
+            stage: 4,
+            ar: 'هي بخير دوم',
+            en: 'She is always fine',
+            tr: 'hiya bikhayr dawm',
+            tiles: ['هي', 'بخير', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s5-01',
+            stage: 5,
+            ar: 'أنا أريد بيت كبير',
+            en: 'I want a big house',
+            tr: 'ana uridu bayt kabir',
+            tiles: ['أنا', 'أريد', 'بيت', 'كبير'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'بيت', en: 'house', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'general-s5-02',
+            stage: 5,
+            ar: 'هو مدرس في المدرسة دوم',
+            en: 'He always teaches at the school',
+            tr: 'huwa mudarris fi al-madrasa dawm',
+            tiles: ['هو', 'مدرس', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'general-s5-03',
+            stage: 5,
+            ar: 'أنت أريد قهوة الآن',
+            en: 'You want coffee now',
+            tr: 'anta uridu qahwa al-aan',
+            tiles: ['أنت', 'أريد', 'قهوة', 'الآن'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'قهوة', en: 'coffee', kind: 'new' },
+                { ar: 'الآن', en: 'now', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s5-04',
+            stage: 5,
+            ar: 'هي جوعانة في البيت اليوم',
+            en: 'She is hungry at home today',
+            tr: 'hiya jo3ana fi al-bayt al-yawm',
+            tiles: ['هي', 'جوعانة', 'في', 'البيت', 'اليوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'general-s5-05',
+            stage: 5,
+            ar: 'هو تعبان دوم في العمل',
+            en: 'He is always tired at work',
+            tr: 'huwa ta3ban dawm fi al-3amal',
+            tiles: ['هو', 'تعبان', 'دوم', 'في', 'العمل'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'general-s5-06',
+            stage: 5,
+            ar: 'أنا بخير دوم في البيت',
+            en: 'I am always fine at home',
+            tr: 'ana bikhayr dawm fi al-bayt',
+            tiles: ['أنا', 'بخير', 'دوم', 'في', 'البيت'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s5-07',
+            stage: 5,
+            ar: 'أنت بخير دوم في المدرسة',
+            en: 'You are always fine at the school',
+            tr: 'anta bikhayr dawm fi al-madrasa',
+            tiles: ['أنت', 'بخير', 'دوم', 'في', 'المدرسة'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s5-08',
+            stage: 5,
+            ar: 'هو كاتب مشهور في المكتب',
+            en: 'He is a famous writer at the office',
+            tr: 'huwa kaatib mashhoor fi al-maktab',
+            tiles: ['هو', 'كاتب', 'مشهور', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s6-01',
+            stage: 6,
+            ar: 'أنا أريد بيت كبير في المدينة',
+            en: 'I want a big house in the city',
+            tr: 'ana uridu bayt kabir fi al-madina',
+            tiles: ['أنا', 'أريد', 'بيت', 'كبير', 'في', 'المدينة'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'أريد', en: 'I want', kind: 'new' },
+                { ar: 'بيت', en: 'house', kind: 'new' },
+                { ar: 'كبير', en: 'big', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدينة', en: 'the city', kind: 'new' }
+            ],
+            roots: [{ ar: 'كبير' }]
+        },
+        {
+            id: 'general-s6-02',
+            stage: 6,
+            ar: 'هو مدرس جيد في المدرسة دوم',
+            en: 'He is always a good teacher at the school',
+            tr: 'huwa mudarris jayyid fi al-madrasa dawm',
+            tiles: ['هو', 'مدرس', 'جيد', 'في', 'المدرسة', 'دوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'مدرس', en: 'teacher', kind: 'new' },
+                { ar: 'جيد', en: 'good', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'مدرس' }]
+        },
+        {
+            id: 'general-s6-03',
+            stage: 6,
+            ar: 'أنت كاتب مشهور في المكتب دوم',
+            en: 'You are always a famous writer at the office',
+            tr: 'anta kaatib mashhoor fi al-maktab dawm',
+            tiles: ['أنت', 'كاتب', 'مشهور', 'في', 'المكتب', 'دوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        },
+        {
+            id: 'general-s6-04',
+            stage: 6,
+            ar: 'هي جوعانة في البيت اليوم دوم',
+            en: 'She is always hungry at home today',
+            tr: 'hiya jo3ana fi al-bayt al-yawm dawm',
+            tiles: ['هي', 'جوعانة', 'في', 'البيت', 'اليوم', 'دوم'],
+            teach: [
+                { ar: 'هي', en: 'she', kind: 'glue' },
+                { ar: 'جوعانة', en: 'hungry (f)', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' }
+            ],
+            roots: [{ ar: 'جوعانة' }]
+        },
+        {
+            id: 'general-s6-05',
+            stage: 6,
+            ar: 'هو تعبان دوم في العمل اليوم',
+            en: 'He is always tired at work today',
+            tr: 'huwa ta3ban dawm fi al-3amal al-yawm',
+            tiles: ['هو', 'تعبان', 'دوم', 'في', 'العمل', 'اليوم'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'تعبان', en: 'tired', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'العمل', en: 'the work', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: [{ ar: 'تعبان' }]
+        },
+        {
+            id: 'general-s6-06',
+            stage: 6,
+            ar: 'أنا بخير دوم في البيت اليوم',
+            en: 'I am always fine at home today',
+            tr: 'ana bikhayr dawm fi al-bayt al-yawm',
+            tiles: ['أنا', 'بخير', 'دوم', 'في', 'البيت', 'اليوم'],
+            teach: [
+                { ar: 'أنا', en: 'I', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'البيت', en: 'the house', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s6-07',
+            stage: 6,
+            ar: 'أنت بخير دوم في المدرسة اليوم',
+            en: 'You are always fine at the school today',
+            tr: 'anta bikhayr dawm fi al-madrasa al-yawm',
+            tiles: ['أنت', 'بخير', 'دوم', 'في', 'المدرسة', 'اليوم'],
+            teach: [
+                { ar: 'أنت', en: 'you (m)', kind: 'glue' },
+                { ar: 'بخير', en: 'fine/well', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المدرسة', en: 'the school', kind: 'new' },
+                { ar: 'اليوم', en: 'today', kind: 'new' }
+            ],
+            roots: []
+        },
+        {
+            id: 'general-s6-08',
+            stage: 6,
+            ar: 'هو كاتب مشهور دوم في المكتب',
+            en: 'He is always a famous writer at the office',
+            tr: 'huwa kaatib mashhoor dawm fi al-maktab',
+            tiles: ['هو', 'كاتب', 'مشهور', 'دوم', 'في', 'المكتب'],
+            teach: [
+                { ar: 'هو', en: 'he', kind: 'glue' },
+                { ar: 'كاتب', en: 'writer', kind: 'new' },
+                { ar: 'مشهور', en: 'famous', kind: 'new' },
+                { ar: 'دوم', en: 'always', kind: 'new' },
+                { ar: 'في', en: 'in/at', kind: 'glue' },
+                { ar: 'المكتب', en: 'the office', kind: 'new' }
+            ],
+            roots: [{ ar: 'كاتب' }]
+        }
+    ],
+
+};
+
+function validateBanks(options) {
+    options = options || {};
+    const banks = options.banks || {};
+    const dialectBank = options.dialectBank || {};
+    const swaps = options.swaps || {};
+    const taughtByDialect = options.taughtByDialect || {};
+    const hasMorphology = typeof options.hasMorphology === 'function' ? options.hasMorphology : function() { return false; };
+
+    const errors = [];
+
+    // ensure every dialect maps
+    const dialectIds = options.dialectIds || null;
+    if (Array.isArray(dialectIds)) {
+        for (let i = 0; i < dialectIds.length; i += 1) {
+            const id = dialectIds[i];
+            if (!Object.prototype.hasOwnProperty.call(dialectBank, id) || !dialectBank[id]) {
+                errors.push('missing bank for ' + id);
+            }
+        }
+    }
+
+    // check each sentence in each bank
+    for (const bankName of Object.keys(banks)) {
+        const bank = banks[bankName] || [];
+        for (let s = 0; s < bank.length; s += 1) {
+            const sent = bank[s];
+            if (!Array.isArray(sent.teach)) {
+                continue;
+            }
+            // keep empty-gloss rejection for teach entries themselves
+            for (let t = 0; t < sent.teach.length; t += 1) {
+                const te = sent.teach[t];
+                if (!te) continue;
+                if (typeof te.en !== 'string' || te.en === '') {
+                    errors.push('empty gloss for ' + (te.ar || sent.id));
+                    continue;
+                }
+            }
+
+            // check tiles per dialect
+            for (const did of Object.keys(dialectBank)) {
+                if (dialectBank[did] !== bankName) continue;
+                const swapMap = (swaps && swaps[did]) || {};
+                const taughtExplicit = Array.isArray(taughtByDialect[did]) ? taughtByDialect[did] : [];
+                if (!Array.isArray(sent.tiles)) continue;
+                for (let i = 0; i < sent.tiles.length; i += 1) {
+                    const origTile = sent.tiles[i];
+                    let eff = origTile;
+                    // Apply DIALECT_SWAPS per dialect before any tile validation
+                    if (swapMap && Object.prototype.hasOwnProperty.call(swapMap, origTile)) {
+                        eff = swapMap[origTile];
+                    }
+
+                    let ok = false;
+
+                    // (a) checking if glossed in that sentence's teach with non-empty en (effective form)
+                    if (Array.isArray(sent.teach)) {
+                        for (let tt = 0; tt < sent.teach.length; tt += 1) {
+                            const tentry = sent.teach[tt];
+                            if (!tentry) continue;
+                            // consider effective form - check both original and effective
+                            if (tentry.ar === eff || tentry.ar === origTile) {
+                                if (typeof tentry.en === 'string' && tentry.en !== '') {
+                                    ok = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // (b) appears in taughtByDialect[did] (effective form, explicit)
+                    if (!ok) {
+                        for (let ti = 0; ti < taughtExplicit.length; ti += 1) {
+                            if (taughtExplicit[ti] === eff || taughtExplicit[ti] === origTile) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // (c) hasMorphology(eff) returns true (effective form)
+                    if (!ok && hasMorphology && hasMorphology(eff)) {
+                        ok = true;
+                    }
+
+                    if (!ok) {
+                        errors.push('untaught/un glossed tile ' + origTile + ' in ' + sent.id);
+                    }
+                }
+            }
+        }
+    }
+
+    // root-bearing coverage: per bank, for each stage 1-6, if that bank has no sentences for that stage, skip the check for (bank,stage)
+    // Only require "at least one root-bearing sentence" when the bank actually contains sentences for that stage.
+    for (const bankName of Object.keys(banks)) {
+        const bank = banks[bankName] || [];
+        for (let stage = 1; stage <= 6; stage += 1) {
+            // check if this bank has any sentences for this stage
+            let hasSentenceForStage = false;
+            for (let s = 0; s < bank.length; s += 1) {
+                if (bank[s].stage === stage) {
+                    hasSentenceForStage = true;
+                    break;
+                }
+            }
+            if (!hasSentenceForStage) {
+                continue;
+            }
+            // require at least one root-bearing sentence in this bank for this stage
+            let foundRootBearing = false;
+            for (let s = 0; s < bank.length; s += 1) {
+                const sent = bank[s];
+                if (sent.stage === stage && Array.isArray(sent.roots) && sent.roots.length > 0) {
+                    foundRootBearing = true;
+                    break;
+                }
+            }
+            if (!foundRootBearing) {
+                errors.push('no root-bearing sentence for stage ' + stage);
+            }
+        }
+    }
+
+    return errors;
+}
+
+const SentenceData = { SENTENCE_BANKS, DIALECT_BANK, DIALECT_SWAPS, STAGE_ANCHORS, validateBanks };
+if (typeof module !== 'undefined') {
+    module.exports = SentenceData;
+}
+
+// Sentence engine - dialect bank resolution and word-arrangement grading.
+// Loaded as a plain <script> in the browser and via require() in Node tests.
+
+const GENERAL_BANK = 'general';
+
+// Pick the sentence bank a dialect reads from, falling back to the shared bank
+// when the dialect has no entry of its own.
+function resolveBank(dialectId, map) {
+    if (map && Object.prototype.hasOwnProperty.call(map, dialectId)) {
+        return map[dialectId];
+    }
+    return GENERAL_BANK;
+}
+
+// Grade a placed word order against the expected answer. The first index where
+// the two arrays disagree is reported; a placement that is too short reports
+// its own length, and an exact match reports -1.
+function gradeArrangement(placed, answer) {
+    const placedWords = placed || [];
+    const answerWords = answer || [];
+    const shared = Math.min(placedWords.length, answerWords.length);
+
+    for (let i = 0; i < shared; i += 1) {
+        if (placedWords[i] !== answerWords[i]) {
+            return { correct: false, firstWrongIndex: i };
+        }
+    }
+
+    if (placedWords.length !== answerWords.length) {
+        return { correct: false, firstWrongIndex: shared };
+    }
+
+    return { correct: true, firstWrongIndex: -1 };
+}
+
+// Stable, bank-scoped id for a sentence stage. Two dialects that read the same
+// bank resolve to the same key, which is what lets them share stage progress.
+function sentenceKey(bank, stage) {
+    return 'sentence:' + bank + ':' + stage;
+}
+
+// One saved completed-lesson entry -> the stable `unit:<key>` id the path uses.
+// Strings that already look stable are kept, bare unit keys are upgraded, and a
+// number is matched against the unit's recorded id first and its position
+// second. An id with no unit behind it is preserved rather than dropped, so a
+// course edit never silently erases progress.
+function migrateUnitId(entry, units) {
+    if (typeof entry === 'string' && entry.indexOf('unit:') === 0) return entry;
+    if (entry === null || entry === undefined) return null;
+
+    const numeric = typeof entry === 'number'
+        ? entry
+        : (typeof entry === 'string' && /^\d+$/.test(entry) ? parseInt(entry, 10) : null);
+
+    if (numeric === null) {
+        for (let i = 0; i < units.length; i += 1) {
+            if (units[i] && units[i].key === entry) return 'unit:' + entry;
+        }
+        return String(entry);
+    }
+
+    for (let i = 0; i < units.length; i += 1) {
+        const unit = units[i];
+        if (unit && unit.id === numeric) return 'unit:' + unit.key;
+    }
+
+    const byPosition = units[numeric - 1];
+    if (byPosition) return 'unit:' + byPosition.key;
+
+    return 'unit:' + numeric;
+}
+
+// Convert saved progress from numeric unit ids to stable ids. Order is kept and
+// duplicates collapse, so running this on already-migrated data changes nothing.
+function migrateCompleted(raw, unitsByDialect) {
+    const source = raw || {};
+    const byDialect = unitsByDialect || {};
+    const migrated = {};
+
+    Object.keys(source).forEach(dialectId => {
+        const entries = Array.isArray(source[dialectId]) ? source[dialectId] : [];
+        const units = byDialect[dialectId] || [];
+        const seen = {};
+        const ids = [];
+
+        for (let i = 0; i < entries.length; i += 1) {
+            const id = migrateUnitId(entries[i], units);
+            if (id === null || seen[id]) continue;
+            seen[id] = true;
+            ids.push(id);
+        }
+
+        migrated[dialectId] = ids;
+    });
+
+    return migrated;
+}
+
+// Build the ordered course path. Every unit appears once, in order, keyed by
+// its stable id; a sentence stage follows the unit that anchors it. Anchors are
+// listed in stage order, so anchors[0] carries stage 1, and only stages the
+// bank has authored produce a node.
+function buildPath(options) {
+    options = options || {};
+    const units = options.units || [];
+    const bank = options.bank || GENERAL_BANK;
+    const anchors = options.anchors || (typeof STAGE_ANCHORS !== 'undefined' ? STAGE_ANCHORS : []);
+    const sentenceStages = options.sentenceStages || [];
+
+    const authored = {};
+    for (let i = 0; i < sentenceStages.length; i += 1) {
+        authored[sentenceStages[i]] = true;
+    }
+
+    const path = [];
+    for (let u = 0; u < units.length; u += 1) {
+        const unit = units[u];
+        path.push({ kind: 'unit', id: 'unit:' + unit.key, unit: unit });
+
+        for (let a = 0; a < anchors.length; a += 1) {
+            const stage = a + 1;
+            if (anchors[a] !== unit.key || !authored[stage]) continue;
+            path.push({ kind: 'sentence', id: sentenceKey(bank, stage), stage: stage, bank: bank });
+        }
+    }
+
+    return path;
+}
+
+// A stage counts as done only for the bank it was played in. `sentenceProgress`
+// is the saved `{ [bank]: number[] }` map, so two gulf dialects share stages and
+// a learner on another bank starts its ladder from the top.
+function isStageDone(sentenceProgress, bank, stage) {
+    const done = sentenceProgress && sentenceProgress[bank];
+    return Array.isArray(done) && done.indexOf(stage) !== -1;
+}
+
+// Whether a single path node is behind the learner. Unit nodes read the saved
+// completed ids; sentence nodes read the bank's stage list. A sentence id in the
+// completed list is accepted too, and so is a legacy numeric unit id, so a path
+// built before or after the id migration answers the same way.
+function isNodeCompleted(node, completedIds, sentenceProgress, fallbackBank) {
+    if (!node) return false;
+
+    const ids = completedIds || [];
+    if (node.kind === 'sentence') {
+        if (isStageDone(sentenceProgress, node.bank || fallbackBank, node.stage)) return true;
+    } else if (node.unit && typeof node.unit.key === 'string'
+        && ids.indexOf('unit:' + node.unit.key) !== -1) {
+        return true;
+    } else if (node.unit && node.unit.id !== undefined && ids.indexOf(node.unit.id) !== -1) {
+        return true;
+    }
+
+    return ids.indexOf(node.id) !== -1;
+}
+
+// Unlock rules for the mixed path. The first node is always open. Every other
+// node waits for the node before it, which is what keeps units and sentence
+// stages interleaved instead of letting a learner jump the queue. A sentence node
+// waits on one more thing: the stage before it in the same bank, so stage 3
+// cannot be played while stage 2 is unfinished even when every unit is done.
+function isUnlocked(path, index, completedIds, bank, sentenceProgress) {
+    const nodes = path || [];
+    if (!Number.isInteger(index) || index < 0 || index >= nodes.length) return false;
+    if (index === 0) return true;
+
+    const node = nodes[index];
+    if (!isNodeCompleted(nodes[index - 1], completedIds, sentenceProgress, bank)) return false;
+
+    if (node.kind !== 'sentence') return true;
+
+    const stage = node.stage;
+    if (!Number.isFinite(stage) || stage <= 1) return true;
+
+    return isStageDone(sentenceProgress, node.bank || bank, stage - 1);
+}
+
+// Copy-and-shuffle for the tray. Duplicates are kept, so a sentence that says
+// a word twice needs two taps: the tray is a multiset, never a set.
+function shuffleTiles(tiles) {
+    const shuffled = tiles.slice();
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const swap = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = swap;
+    }
+    return shuffled;
+}
+
+// One tile-building question per sentence in a stage. The answer order lives on
+// `sentence.tiles` and is never touched, so grading has a reference; the tray
+// gets its own shuffled copy to keep the layout unrelated to the solution.
+function buildSentenceQuestions(stageSentences) {
+    const sentences = Array.isArray(stageSentences) ? stageSentences : [];
+
+    return sentences
+        .filter(sentence => sentence && Array.isArray(sentence.tiles))
+        .map(sentence => ({
+            kind: 'build',
+            sentence: sentence,
+            tiles: shuffleTiles(sentence.tiles)
+        }));
+}
+
+// Normalise an Arabic spelling the same way data/roots.js does, with a local
+// fallback so the engine works in Node without loading the roots script first.
+function normalizeToken(value) {
+    if (typeof normArabic === 'function') return normArabic(value);
+    return String(value || '')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
+        .replace(/[\u0622\u0623\u0625\u0671]/g, '\u0627')
+        .replace(/\u0649/g, '\u064A')
+        .replace(/\u0629/g, '\u0647')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Resolve a tile to the form record that carries its root and pattern. The flat
+// ROOT_FORM_LIST is the source; WORD_MORPHOLOGY is the browser-side fallback so
+// a token still shows its root even if the pool was not passed in.
+function findMorphForm(token, patternPool) {
+    if (!token) return null;
+    const key = normalizeToken(token);
+    const pool = Array.isArray(patternPool)
+        ? patternPool
+        : (typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : []);
+
+    for (let i = 0; i < pool.length; i += 1) {
+        const form = pool[i];
+        if (!form || !form.pattern) continue;
+        if (normalizeToken(form.ar) !== key) continue;
+        return {
+            ar: token,
+            en: form.en || '',
+            root: form.root,
+            rootMeaning: form.rootMeaning || '',
+            pattern: form.pattern,
+            patternLatin: form.patternLatin || '',
+            patternRole: form.patternRole || form.role || ''
+        };
+    }
+
+    if (typeof WORD_MORPHOLOGY !== 'undefined' && WORD_MORPHOLOGY) {
+        const m = WORD_MORPHOLOGY[key];
+        if (m) {
+            return {
+                ar: token,
+                en: '',
+                root: m.root,
+                rootMeaning: m.rootMeaning || '',
+                pattern: m.pattern,
+                patternLatin: m.patternLatin || '',
+                patternRole: m.role || ''
+            };
+        }
+    }
+
+    return null;
+}
+
+// One pattern question for a sentence that contains a word we can analyse. The
+// answer is the token's own pattern; the three distractors are other patterns
+// drawn from the same pool, so every choice is a mould the course knows.
+function buildRootMoment(sentence, patternPool) {
+    if (!sentence || !Array.isArray(sentence.tiles)) return null;
+
+    const pool = Array.isArray(patternPool)
+        ? patternPool
+        : (typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : []);
+    let word = null;
+    for (let i = 0; i < sentence.tiles.length; i += 1) {
+        const form = findMorphForm(sentence.tiles[i], pool);
+        if (form && form.pattern) {
+            word = form;
+            break;
+        }
+    }
+    if (!word) return null;
+
+    const seen = {};
+    const patterns = [];
+    for (let i = 0; i < pool.length; i += 1) {
+        // The pool is normally ROOT_FORM_LIST (form records), but accepting a
+        // bare list of pattern strings costs nothing and keeps the function
+        // usable as a pure pattern source.
+        const entry = pool[i];
+        const pattern = typeof entry === 'string' ? entry : (entry && entry.pattern);
+        if (!pattern || seen[pattern]) continue;
+        seen[pattern] = true;
+        patterns.push(pattern);
+    }
+    if (!seen[word.pattern]) patterns.push(word.pattern);
+
+    const distractors = shuffleTiles(patterns.filter(p => p !== word.pattern)).slice(0, 3);
+    const options = shuffleTiles([word.pattern].concat(distractors));
+
+    return {
+        word: word,
+        root: word.root,
+        pattern: word.pattern,
+        options: options,
+        answer: word.pattern
+    };
+}
+
+const SentenceEngine = {
+    resolveBank,
+    gradeArrangement,
+    buildPath,
+    migrateCompleted,
+    sentenceKey,
+    isUnlocked,
+    buildSentenceQuestions,
+    findMorphForm,
+    buildRootMoment
+};
+if (typeof module !== 'undefined') module.exports = SentenceEngine;
 
 // Arabic Learning App - Duolingo-style lesson engine
 // Pure vanilla JS, localStorage persistence, SpeechSynthesis audio.
@@ -3230,6 +6050,97 @@ const REPS_PER_WORD = 2;
 const TEST_LENGTH = 20;
 const ROOT_DRILL_LENGTH = 10;
 
+// A sentence stage belongs to a bank, not a dialect. Two dialects reading the
+// same bank share the stages they have finished; a dialect on another bank has
+// its own list.
+function sentenceBankFor(dialectId) {
+    if (typeof resolveBank === 'function' && typeof DIALECT_BANK !== 'undefined') {
+        return resolveBank(dialectId, DIALECT_BANK);
+    }
+    return 'general';
+}
+
+// How long a sentence stage's sentences are. A stage is described by its
+// longest sentence so the hint cannot drift from the data it is drawn from.
+const SENTENCE_LENGTH_BANDS = [
+    { max: 2, label: '2 words' },
+    { max: 3, label: '3 words' },
+    { max: 5, label: '4–5 words' },
+    { max: 8, label: '6–8 words' },
+    { max: 12, label: '9–12 words' },
+    { max: Infinity, label: '13+ words' }
+];
+
+const SENTENCE_BANK_LABELS = {
+    gulf: 'Gulf Arabic',
+    levantine: 'Levantine Arabic',
+    egyptian: 'Egyptian Arabic',
+    maghrebi: 'Maghrebi Arabic',
+    general: 'Standard Arabic'
+};
+
+function stageSentences(bank, stage) {
+    if (typeof SENTENCE_BANKS === 'undefined') return [];
+    return (SENTENCE_BANKS[bank] || []).filter(s => s && s.stage === stage);
+}
+
+function stageLengthHint(bank, stage) {
+    const sentences = stageSentences(bank, stage);
+    if (!sentences.length) return '';
+    const longest = Math.max(...sentences.map(s => (Array.isArray(s.tiles) ? s.tiles.length : 0)));
+    const band = SENTENCE_LENGTH_BANDS.find(b => longest <= b.max);
+    return band ? band.label : '';
+}
+
+function bankLabel(bank) {
+    return SENTENCE_BANK_LABELS[bank] || SENTENCE_BANK_LABELS.general;
+}
+
+// Stages a bank has actually written. buildPath() only emits a node for these,
+// so an authoring pass adds a card without touching the renderer.
+function authoredStages(bank) {
+    if (typeof SENTENCE_BANKS === 'undefined') return [];
+    const stages = [];
+    (SENTENCE_BANKS[bank] || []).forEach(s => {
+        if (s && typeof s.stage === 'number' && !stages.includes(s.stage)) stages.push(s.stage);
+    });
+    return stages.sort((a, b) => a - b);
+}
+
+function hasNumericUnitId(completedLessons) {
+    return Object.keys(completedLessons).some(dialectId => {
+        const entries = completedLessons[dialectId];
+        if (!Array.isArray(entries)) return false;
+        return entries.some(id => typeof id === 'number' ||
+            (typeof id === 'string' && /^\d+$/.test(id)));
+    });
+}
+
+// Saved unit progress used to hold numeric ids. Convert it to the stable
+// `unit:<key>` ids the path uses and write the result back once.
+function loadCompletedLessons() {
+    const raw = store.json('arabicLearn_completed', {}) || {};
+    if (!hasNumericUnitId(raw)) return raw;
+    if (typeof SentenceEngine === 'undefined' || !SentenceEngine.migrateCompleted) return raw;
+
+    const migrated = SentenceEngine.migrateCompleted(raw, lessonData);
+    store.set('arabicLearn_completed', JSON.stringify(migrated));
+    return migrated;
+}
+
+function loadSentenceProgress() {
+    const raw = store.json('arabicLearn_sentenceProgress', {});
+    return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+}
+
+// Progress may predate the migration, so both the stable id and the legacy
+// numeric id count as done.
+function isUnitDone(completed, unit) {
+    if (!unit) return false;
+    if (completed.includes(unit.id)) return true;
+    return typeof unit.key === 'string' && completed.includes('unit:' + unit.key);
+}
+
 // Pause after an answer before the next question appears. Testers found the
 // old 900ms too tight to read the word, so both pauses gained 300ms.
 const ADVANCE_CORRECT_MS = 1200;
@@ -3242,7 +6153,8 @@ class ArabicLearnApp {
             xp: parseInt(store.get('arabicLearn_xp', '0')) || 0,
             streak: parseInt(store.get('arabicLearn_streak', '0')) || 0,
             lastActiveDate: store.get('arabicLearn_lastActive', null),
-            completedLessons: store.json('arabicLearn_completed', {}),
+            completedLessons: loadCompletedLessons(),
+            sentenceProgress: loadSentenceProgress(),
             wordStats: store.json('arabicLearn_wordStats', {}),
             mode: 'lesson',
             currentLesson: null,
@@ -3250,6 +6162,8 @@ class ArabicLearnApp {
             currentQuestionIndex: 0,
             correctThisSession: 0,
             exercise: null,
+            assembled: [],
+            tray: [],
             showRoot: false,
             pool: null,
             dirs: null,
@@ -3333,7 +6247,7 @@ class ArabicLearnApp {
     showHome() {
         this.dom.headerDialectName.textContent =
             `${this.state.currentDialect.flag} ${this.state.currentDialect.nameEn}`;
-        this.renderUnits();
+        this.renderPath();
         this.updateStats();
         this.showScreen('homeScreen');
         this.setNav('home');
@@ -3384,53 +6298,123 @@ class ArabicLearnApp {
         this.showHome();
     }
 
-    // ---------- Units ----------
-    renderUnits() {
+    // ---------- Path ----------
+    // The home list is a mixed path: word units plus the sentence stages that
+    // sit after their anchor units. buildPath() owns the order and isUnlocked()
+    // owns the lock rules, so this method only describes what it is handed.
+    renderPath() {
         const list = this.dom.unitsList;
         list.innerHTML = '';
         const dialectId = this.state.currentDialect.id;
         const lessons = lessonData[dialectId] || [];
         const completed = this.state.completedLessons[dialectId] || [];
+        const bank = sentenceBankFor(dialectId);
+        const sentenceProgress = this.state.sentenceProgress || {};
+        const path = this.buildSentencePath(lessons, bank);
 
-        lessons.forEach((unit, index) => {
-            const isCompleted = completed.includes(unit.id);
-            const prevCompleted = index === 0 || completed.includes(lessons[index - 1].id);
-            const isLocked = !isCompleted && !prevCompleted;
-
-            const card = document.createElement('div');
-            card.className = `unit-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
-            card.setAttribute('role', 'button');
-            card.setAttribute('tabindex', isLocked ? '-1' : '0');
-            card.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
-
-            const status = isCompleted ? '✓ Done'
-                : isLocked ? '🔒 Locked'
-                : 'Start';
-
-            card.innerHTML = `
-                <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '▶'}</div>
-                <div class="unit-body">
-                    <div class="unit-header">
-                        <span class="unit-title">${unit.title}</span>
-                        <span class="unit-status">${status}</span>
-                    </div>
-                    <div class="unit-desc">${unit.desc} · ${unit.words.length} words · ${unit.words.length * REPS_PER_WORD} questions</div>
-                </div>
-            `;
-
-            if (!isLocked) {
-                const activate = () => this.startLesson(unit);
-                card.addEventListener('click', activate);
-                card.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        activate();
-                    }
-                });
-            }
-
+        path.forEach((node, index) => {
+            const isCompleted = this.isPathNodeDone(node, completed, sentenceProgress, bank);
+            const isLocked = this.isPathNodeLocked(path, index, completed, bank, sentenceProgress);
+            const card = node.kind === 'sentence'
+                ? this.renderSentenceCard(node, isLocked, isCompleted)
+                : this.renderUnitCard(node.unit, isLocked, isCompleted);
             list.appendChild(card);
         });
+    }
+
+    buildSentencePath(lessons, bank) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildPath) {
+            // Without the engine the path still renders, just without sentences.
+            return lessons.map(unit => ({ kind: 'unit', id: 'unit:' + unit.key, unit: unit }));
+        }
+        return SentenceEngine.buildPath({
+            units: lessons,
+            bank: bank,
+            anchors: typeof STAGE_ANCHORS !== 'undefined' ? STAGE_ANCHORS : [],
+            sentenceStages: authoredStages(bank)
+        });
+    }
+
+    isPathNodeDone(node, completed, sentenceProgress, bank) {
+        if (!node) return false;
+        if (node.kind === 'sentence') {
+            const done = sentenceProgress[node.bank || bank];
+            return Array.isArray(done) && done.includes(node.stage);
+        }
+        return isUnitDone(completed, node.unit);
+    }
+
+    isPathNodeLocked(path, index, completed, bank, sentenceProgress) {
+        if (typeof SentenceEngine !== 'undefined' && SentenceEngine.isUnlocked) {
+            return !SentenceEngine.isUnlocked(path, index, completed, bank, sentenceProgress);
+        }
+        if (index === 0) return false;
+        return !this.isPathNodeDone(path[index - 1], completed, sentenceProgress, bank);
+    }
+
+    // Both card kinds share the same shell: badge, title, status and one line
+    // of detail. Only what fills that shell differs.
+    bindCardActivation(card, isLocked, activate) {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', isLocked ? '-1' : '0');
+        card.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
+        if (isLocked) return;
+        card.addEventListener('click', activate);
+        card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activate();
+            }
+        });
+    }
+
+    renderUnitCard(unit, isLocked, isCompleted) {
+        const card = document.createElement('div');
+        card.className = `unit-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+
+        const status = isCompleted ? '✓ Done'
+            : isLocked ? '🔒 Locked'
+            : 'Start';
+
+        card.innerHTML = `
+            <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '▶'}</div>
+            <div class="unit-body">
+                <div class="unit-header">
+                    <span class="unit-title">${unit.title}</span>
+                    <span class="unit-status">${status}</span>
+                </div>
+                <div class="unit-desc">${unit.desc} · ${unit.words.length} words · ${unit.words.length * REPS_PER_WORD} questions</div>
+            </div>
+        `;
+
+        this.bindCardActivation(card, isLocked, () => this.startLesson(unit));
+        return card;
+    }
+
+    renderSentenceCard(node, isLocked, isCompleted) {
+        const card = document.createElement('div');
+        card.className = `unit-card sentence-card${isLocked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+
+        const status = isCompleted ? '✓ Done'
+            : isLocked ? '🔒 Locked'
+            : 'Start';
+        const meta = [stageLengthHint(node.bank, node.stage), bankLabel(node.bank)]
+            .filter(Boolean)
+            .join(' · ');
+
+        card.innerHTML = `
+            <div class="unit-badge" aria-hidden="true">${isCompleted ? '★' : isLocked ? '🔒' : '💬'}</div>
+            <div class="unit-body">
+                <div class="unit-header">
+                    <span class="unit-title">Sentences · Stage ${node.stage}</span>
+                    <span class="unit-status">${status}</span>
+                </div>
+                <div class="unit-desc">${meta}</div>
+            </div>
+        `;
+
+        this.bindCardActivation(card, isLocked, () => this.startSentenceStage(node.stage, node.bank));
+        return card;
     }
 
     // ---------- Lesson engine ----------
@@ -3438,16 +6422,26 @@ class ArabicLearnApp {
         this.beginSession('lesson', unit.title, unit.words, unit.id);
     }
 
+    startSentenceStage(stage, bank) {
+        const resolved = bank || sentenceBankFor(this.state.currentDialect.id);
+        this.beginSession('sentence', `Sentence · Stage ${stage}`, [], null, {
+            stage: stage,
+            bank: resolved
+        });
+    }
+
     // unitId must survive into currentLesson: completeSession() reads it to mark
     // the unit done, which is what unlocks the next one. Tests pass no id.
     // options: { showRoot, dirs, pool } — used by the root-inference drill.
     beginSession(mode, title, words, unitId = null, options = {}) {
         this.state.mode = mode;
-        this.state.currentLesson = { id: unitId, title, words };
+        this.state.currentLesson = { id: unitId, title, words, stage: options.stage, bank: options.bank };
         this.state.showRoot = !!options.showRoot;
         this.state.dirs = options.dirs || null;
         this.state.pool = options.pool || null;
-        this.state.questions = this.buildQuestions(words, this.state.dirs);
+        this.state.questions = mode === 'sentence'
+            ? this.buildSentenceQuestionSet(options.bank, options.stage)
+            : this.buildQuestions(words, this.state.dirs);
         this.state.currentQuestionIndex = 0;
         this.state.correctThisSession = 0;
 
@@ -3478,6 +6472,33 @@ class ArabicLearnApp {
             }
         });
         return this.shuffle(questions);
+    }
+
+    // A sentence stage drills one sentence per question. The stage is resolved
+    // from the bank it was opened on, so a gulf stage is the same drill for
+    // every gulf dialect.
+    buildSentenceQuestionSet(bank, stage) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildSentenceQuestions) return [];
+        const resolvedBank = bank || sentenceBankFor(this.state.currentDialect ? this.state.currentDialect.id : null);
+        const sentences = stageSentences(resolvedBank, stage);
+        const questions = SentenceEngine.buildSentenceQuestions(sentences);
+
+        // A stage ends by asking what one of its words is made of. The moment is
+        // only added when a sentence actually carries a root-and-pattern word.
+        const moment = this.buildStageRootMoment(sentences);
+        if (moment) questions.push({ kind: 'root', moment: moment });
+
+        return questions;
+    }
+
+    buildStageRootMoment(sentences) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.buildRootMoment) return null;
+        const pool = typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : [];
+        for (let i = 0; i < (sentences || []).length; i += 1) {
+            const moment = SentenceEngine.buildRootMoment(sentences[i], pool);
+            if (moment) return moment;
+        }
+        return null;
     }
 
     buildExercise(word, dir) {
@@ -3549,12 +6570,19 @@ class ArabicLearnApp {
         this.clearTimers();
         this._locked = false;
 
-        const q = this.state.questions[this.state.currentQuestionIndex];
-        const total = this.state.questions.length;
+        if (this.state.mode === 'sentence') {
+            this.renderSentenceQuestion();
+            return;
+        }
 
-        this.dom.currentQ.textContent = this.state.currentQuestionIndex + 1;
-        this.dom.lessonProgressFill.style.width =
-            (this.state.currentQuestionIndex / total) * 100 + '%';
+        const q = this.state.questions[this.state.currentQuestionIndex];
+        if (!q) {
+            this.dom.questionArea.innerHTML =
+                '<p class="question-instruction">No sentences in this stage yet.</p>';
+            return;
+        }
+
+        this.updateQuestionProgress();
 
         const exercise = this.buildExercise(q.word, q.dir);
         this.state.exercise = exercise;
@@ -3596,7 +6624,264 @@ class ArabicLearnApp {
             choicesDiv.appendChild(btn);
         });
 
+        this.resetFeedback();
+    }
+
+    // ---------- Sentence tile builder ----------
+    // One tap places a tile; the strip is RTL, so the first word lands at the
+    // right edge and the sentence builds the way it is read. There is no submit
+    // button: filling the last slot is the submission.
+    renderSentenceQuestion() {
+        const q = this.state.questions[this.state.currentQuestionIndex];
+        if (!q) {
+            this.dom.questionArea.innerHTML =
+                '<p class="question-instruction">No sentences in this stage yet.</p>';
+            return;
+        }
+
+        this.updateQuestionProgress();
+
+        if (q.kind === 'root') {
+            this.renderRootQuestion(q);
+            return;
+        }
+
+        this.state.exercise = q;
+        this.state.assembled = [];
+        this.state.tray = [...q.tiles];
+
+        this.dom.questionArea.innerHTML = `
+            <p class="question-instruction">Build the sentence</p>
+            <div class="build-strip" id="buildStrip" dir="rtl" role="group" aria-label="Your sentence"></div>
+            <div class="build-tray" id="buildTray" dir="rtl" role="group" aria-label="Word tiles"></div>
+            <p class="build-hint">Tap a word to place it, tap a placed word to send it back.</p>
+        `;
+
+        this.renderBuildTiles();
+        this.resetFeedback();
+    }
+
+    // The close of a stage: one word, four pattern moulds. The word's own
+    // pattern is always among them, and a miss is marked like any other miss.
+    renderRootQuestion(q) {
+        const moment = q.moment;
+        this.state.exercise = moment;
+        this.state.assembled = [];
+        this.state.tray = [];
+
+        const area = this.dom.questionArea;
+        area.innerHTML = `
+            <p class="question-instruction" dir="ltr">Which pattern is this word built on?</p>
+            <div class="root-moment-prompt">
+                <div class="root-moment-word" dir="rtl">${moment.word.ar}</div>
+                <div class="root-moment-gloss">${moment.word.en || moment.word.rootMeaning || ''}</div>
+            </div>
+            <div class="choices" id="choices" role="group" aria-label="Pattern choices"></div>
+        `;
+
+        const choicesDiv = document.getElementById('choices');
+        moment.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'choice-btn pattern-choice';
+            btn.dir = 'rtl';
+            btn.textContent = option;
+            btn.addEventListener('click', () => this.selectRootChoice(option, btn));
+            choicesDiv.appendChild(btn);
+        });
+
+        this.resetFeedback();
+    }
+
+    selectRootChoice(option, btn) {
+        if (this._locked) return;
+        this._locked = true;
+
+        const moment = this.state.exercise;
+        const isCorrect = option === moment.answer;
+
+        document.querySelectorAll('.choice-btn').forEach(c => {
+            c.disabled = true;
+            if (c.textContent === moment.answer) {
+                c.classList.add('correct');
+            } else if (c === btn) {
+                c.classList.add('wrong');
+            }
+        });
+
+        if (isCorrect) {
+            this.state.correctThisSession++;
+            this.addXp(10);
+            this.dom.feedbackText.textContent = 'Correct';
+            this.dom.feedbackArea.className = 'feedback-area feedback-correct';
+        } else {
+            this.dom.feedbackText.textContent = `Correct answer: ${moment.answer}`;
+            this.dom.feedbackText.setAttribute('dir', 'rtl');
+            this.dom.feedbackArea.className = 'feedback-area feedback-wrong';
+        }
+
+        // The same equation the word drill uses, so the pattern is tied back to
+        // the sentence the learner just built.
+        this.showRootNote(moment.word);
+
+        this.autoAdvance(isCorrect ? ADVANCE_CORRECT_MS : ADVANCE_WRONG_MS, isCorrect);
+    }
+
+    // The tray and the strip are both redrawn from state, which keeps duplicate
+    // words honest: a tile is picked by position, never by text.
+    renderBuildTiles() {
+        const strip = document.getElementById('buildStrip');
+        const tray = document.getElementById('buildTray');
+        if (!strip || !tray) return;
+
+        strip.innerHTML = '';
+        tray.innerHTML = '';
+
+        this.state.assembled.forEach((word, i) => {
+            strip.appendChild(this.buildTile(word, 'answer', i));
+        });
+        this.state.tray.forEach((word, i) => {
+            tray.appendChild(this.buildTile(word, 'tray', i));
+        });
+
+        strip.classList.toggle('is-empty', this.state.assembled.length === 0);
+    }
+
+    // The word on top, its gloss underneath. The gloss is only drawn for a
+    // placed tile whose word the sentence itself teaches (a glue word or a new
+    // one), so the strip never invents a meaning the stage did not give.
+    teachGloss(word) {
+        const sentence = this.state.exercise && this.state.exercise.sentence;
+        const teach = sentence && Array.isArray(sentence.teach) ? sentence.teach : [];
+        for (let i = 0; i < teach.length; i += 1) {
+            const entry = teach[i];
+            if (!entry || entry.ar !== word) continue;
+            if (entry.kind !== 'glue' && entry.kind !== 'new') continue;
+            return entry.en || '';
+        }
+        return '';
+    }
+
+    morphWordFor(word) {
+        if (typeof SentenceEngine === 'undefined' || !SentenceEngine.findMorphForm) return null;
+        const pool = typeof ROOT_FORM_LIST !== 'undefined' ? ROOT_FORM_LIST : [];
+        return SentenceEngine.findMorphForm(word, pool);
+    }
+
+    sentenceMorphWord(sentence) {
+        if (!sentence || !Array.isArray(sentence.tiles)) return null;
+        for (let i = 0; i < sentence.tiles.length; i += 1) {
+            const form = this.morphWordFor(sentence.tiles[i]);
+            if (form) return form;
+        }
+        return null;
+    }
+
+    buildTile(word, from, index) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `build-tile build-tile-${from}`;
+        btn.dataset.index = index;
+
+        const label = document.createElement('span');
+        label.className = 'build-tile-word';
+        label.textContent = word;
+        btn.appendChild(label);
+
+        if (from === 'answer') {
+            const chips = document.createElement('span');
+            chips.className = 'build-tile-chips';
+
+            const gloss = this.teachGloss(word);
+            if (gloss) {
+                const glossChip = document.createElement('span');
+                glossChip.className = 'tile-gloss';
+                glossChip.dir = 'ltr';
+                glossChip.textContent = gloss;
+                chips.appendChild(glossChip);
+            }
+
+            const morph = this.morphWordFor(word);
+            if (morph && morph.root) {
+                const rootChip = document.createElement('span');
+                rootChip.className = 'tile-root-chip';
+                rootChip.dir = 'ltr';
+                rootChip.textContent = `Root ${morph.root}`;
+                chips.appendChild(rootChip);
+            }
+
+            if (chips.childNodes.length) btn.appendChild(chips);
+        }
+
+        btn.addEventListener('click', () => this.selectTile(from, index));
+        return btn;
+    }
+
+    // from: 'tray' moves a tile into the sentence, 'answer' sends it back.
+    selectTile(from, index) {
+        if (this._locked) return;
+        const i = Number(index);
+        if (!Number.isInteger(i) || i < 0) return;
+
+        if (from === 'tray') {
+            if (i >= this.state.tray.length) return;
+            this.state.assembled.push(this.state.tray.splice(i, 1)[0]);
+        } else if (from === 'answer') {
+            if (i >= this.state.assembled.length) return;
+            this.state.tray.push(this.state.assembled.splice(i, 1)[0]);
+        } else {
+            return;
+        }
+
+        this.renderBuildTiles();
+
+        const answer = this.state.exercise.sentence.tiles;
+        if (this.state.assembled.length === answer.length) this.gradeBuild();
+    }
+
+    gradeBuild() {
+        if (this._locked) return;
+        this._locked = true;
+
+        const sentence = this.state.exercise.sentence;
+        const answer = sentence.tiles;
+        const result = SentenceEngine.gradeArrangement(this.state.assembled, answer);
+        const strip = document.getElementById('buildStrip');
+
+        document.querySelectorAll('.build-tile').forEach(tile => { tile.disabled = true; });
+
+        // After either outcome, name the machinery behind the hardest word in
+        // the sentence: root + pattern = word.
+        const morph = this.sentenceMorphWord(sentence);
+        if (morph) this.showRootNote(morph);
+
+        if (result.correct) {
+            this.state.correctThisSession++;
+            this.addXp(10);
+            if (strip) strip.classList.add('correct');
+            this.dom.feedbackText.textContent = 'Correct';
+            this.dom.feedbackArea.className = 'feedback-area feedback-correct';
+            this.autoAdvance(ADVANCE_CORRECT_MS, true);
+            return;
+        }
+
+        if (strip) strip.classList.add('wrong');
+        this.dom.feedbackText.textContent = `Correct answer: ${sentence.ar || answer.join(' ')}`;
+        this.dom.feedbackText.setAttribute('dir', 'rtl');
+        this.dom.feedbackArea.className = 'feedback-area feedback-wrong';
+        this.autoAdvance(ADVANCE_WRONG_MS, false);
+    }
+
+    updateQuestionProgress() {
+        const total = this.state.questions.length;
+        this.dom.currentQ.textContent = this.state.currentQuestionIndex + 1;
+        this.dom.lessonProgressFill.style.width =
+            (total ? (this.state.currentQuestionIndex / total) * 100 : 0) + '%';
+    }
+
+    resetFeedback() {
         this.dom.feedbackText.textContent = '';
+        this.dom.feedbackText.removeAttribute('dir');
         this.clearRootNote();
         this.dom.feedbackArea.className = 'feedback-area';
         this.dom.autoTimer.hidden = true;
@@ -3699,14 +6984,22 @@ class ArabicLearnApp {
         const acc = total ? Math.round((correct / total) * 100) : 0;
         const isTest = this.state.mode === 'test';
         const isRoots = this.state.mode === 'roots';
+        const isSentence = this.state.mode === 'sentence';
 
-        if (!isTest) {
+        if (isSentence) {
+            this.recordSentenceStage();
+        } else if (!isTest) {
             const dialectId = this.state.currentDialect.id;
             const unitId = this.state.currentLesson.id;
-            if (unitId != null) {
+            const unit = (lessonData[dialectId] || []).find(u => u.id === unitId);
+            const completedId = unit ? 'unit:' + unit.key : unitId;
+
+            if (completedId != null) {
                 if (!this.state.completedLessons[dialectId]) this.state.completedLessons[dialectId] = [];
-                if (!this.state.completedLessons[dialectId].includes(unitId)) {
-                    this.state.completedLessons[dialectId].push(unitId);
+                const done = this.state.completedLessons[dialectId];
+                const alreadyDone = unit ? isUnitDone(done, unit) : done.includes(completedId);
+                if (!alreadyDone) {
+                    done.push(completedId);
                     this.addXp(50);
                 }
                 store.set('arabicLearn_completed', JSON.stringify(this.state.completedLessons));
@@ -3745,6 +7038,37 @@ class ArabicLearnApp {
         document.getElementById('completeBtn').addEventListener('click', () => this.closeLesson());
     }
 
+    // A sentence stage belongs to the bank, not the dialect: finishing it once
+    // in any gulf dialect opens the next stage for every gulf dialect. Unit
+    // progress is left alone, so the two ladders never overwrite each other.
+    recordSentenceStage() {
+        const lesson = this.state.currentLesson || {};
+        let bank = lesson.bank;
+        let stage = lesson.stage;
+
+        if (typeof lesson.id === 'string') {
+            const match = /^sentence:([^:]+):(\d+)$/.exec(lesson.id);
+            if (match) {
+                if (!bank) bank = match[1];
+                if (stage === null || stage === undefined) stage = parseInt(match[2], 10);
+            }
+        }
+
+        if (!bank) {
+            const dialectId = this.state.currentDialect ? this.state.currentDialect.id : null;
+            bank = sentenceBankFor(dialectId);
+        }
+
+        const stageNumber = typeof stage === 'number' ? stage : parseInt(stage, 10);
+        if (!Number.isFinite(stageNumber)) return;
+
+        if (!this.state.sentenceProgress) this.state.sentenceProgress = {};
+        const done = this.state.sentenceProgress[bank] || [];
+        if (!done.includes(stageNumber)) done.push(stageNumber);
+        this.state.sentenceProgress[bank] = done;
+        store.set('arabicLearn_sentenceProgress', JSON.stringify(this.state.sentenceProgress));
+    }
+
     closeLesson() {
         this.clearTimers();
         this._locked = false;
@@ -3754,6 +7078,8 @@ class ArabicLearnApp {
             this.setNav('test');
         } else if (this.state.mode === 'roots') {
             this.renderRootsScreen();
+        } else if (this.state.mode === 'sentence') {
+            this.showHome();
         } else {
             this.showHome();
         }
@@ -3779,7 +7105,7 @@ class ArabicLearnApp {
         const lessons = lessonData[dialectId] || [];
         const completed = this.state.completedLessons[dialectId] || [];
         lessons.forEach(u => {
-            if (completed.includes(u.id)) pool.push(...u.words);
+            if (isUnitDone(completed, u)) pool.push(...u.words);
         });
         // Always include the dialect basics so a test is possible from day one.
         if (lessons[0]) pool.push(...lessons[0].words);
@@ -4068,6 +7394,8 @@ if (document.readyState === 'loading') {
 }
 
 </script>
+    
+    
     
     
     

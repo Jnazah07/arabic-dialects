@@ -12,6 +12,8 @@ const APP_SHELL = [
     './data/dialects.js',
     './data/roots.js',
     './data/lessonData.js',
+    './data/sentences.js',
+    './js/sentenceEngine.js',
     './js/app.js',
     './manifest.webmanifest',
     './assets/icon-192.png',
